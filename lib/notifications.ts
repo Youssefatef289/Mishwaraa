@@ -1,0 +1,2 @@
+type Notice={to:string;subject:string;html:string;phone?:string};
+export async function sendNotification(n:Notice){if(process.env.RESEND_API_KEY){const {Resend}=await import('resend');await new Resend(process.env.RESEND_API_KEY).emails.send({from:process.env.NOTIFICATION_FROM||'Mishwar <onboarding@resend.dev>',to:n.to,subject:n.subject,html:n.html})} if(process.env.TWILIO_ENABLED==='true'){/* Add Twilio provider here; deliberately disabled until credentials are configured. */}}

@@ -1,0 +1,1 @@
+export default function StatusChip({status}:{status:string}){const labels:Record<string,string>={pending:'قيد المراجعة',confirmed:'مؤكد',rejected:'مرفوض',cancelled:'ملغي',available:'متاحة',rented:'مؤجرة',maintenance:'صيانة'};const style=status==='maintenance'?'pending':status;return <span className={`plate plate-${style}`}>{labels[status]||status}</span>}

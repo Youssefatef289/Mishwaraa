@@ -1,0 +1,4 @@
+-- Run after creating local auth users, or replace user_id values with real dealer profile IDs.
+-- Sample public inventory can also be inserted through Studio after approving each dealer.
+-- Cairo / Alexandria / Giza sample names for local UI validation:
+-- النيل لتأجير السيارات، الإسكندرية موتورز، أهرام درايف

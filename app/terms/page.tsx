@@ -1,0 +1,1 @@
+export default function Terms(){return <article><h1 className="text-3xl font-bold">الشروط والأحكام</h1><p className="mt-4">هذه نسخة مؤقتة من الشروط. سيُستبدل هذا النص بالمستند القانوني المعتمد قبل الإطلاق.</p></article>}
