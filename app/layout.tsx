@@ -1,3 +1,36 @@
-import './globals.css'; import Link from 'next/link'; import ThemeToggle from '@/components/theme-toggle';
-export const metadata={title:'مشوار | Mishwar',description:'Car rental marketplace for Egypt'};
-export default function Layout({children}:{children:React.ReactNode}) { return <html lang="ar" dir="rtl"><body><header className="border-b" style={{background:'var(--surface)'}}><nav className="mx-auto flex max-w-[960px] items-center justify-between p-4"><Link href="/" className="text-2xl font-extrabold" style={{color:'var(--amber)'}}>مشوار</Link><div className="flex items-center gap-4 text-sm"><Link href="/cars">السيارات</Link><Link href="/bookings">حجوزاتي</Link><Link href="/dashboard">لوحة المعرض</Link><Link href="/login">دخول</Link><ThemeToggle/></div></nav></header><main className="mx-auto max-w-[960px] p-5 md:p-7">{children}</main></body></html> }
+import './globals.css';
+import Navbar from '@/components/navbar';
+import Footer from '@/components/footer';
+import { createClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/env';
+
+export const metadata = { title: 'مشوار | Mishwar', description: 'Car rental marketplace for Egypt' };
+
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  let user: { name: string; role?: string } | null = null;
+  if (isSupabaseConfigured) {
+    try {
+      const s = await createClient();
+      const { data: { user: u } } = await s.auth.getUser();
+      if (u) {
+        const { data: profile } = await s.from('profiles').select('role').eq('id', u.id).maybeSingle();
+        const role = (profile?.role as string | undefined) ?? null;
+        let name = ((u.user_metadata as Record<string, unknown>)?.full_name as string | undefined) ?? '';
+        if (role === 'dealer') {
+          const { data: dealer } = await s.from('dealers').select('name').eq('user_id', u.id).maybeSingle();
+          name = (dealer?.name as string | undefined) || ((u.user_metadata as Record<string, unknown>)?.dealer_name as string | undefined) || name;
+        }
+        user = { name, role: role ?? undefined };
+      }
+    } catch {}
+  }
+  return (
+    <html lang="ar" dir="rtl">
+      <body>
+        <Navbar user={user} />
+        <main className="mx-auto max-w-[960px] p-5 md:p-7">{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
