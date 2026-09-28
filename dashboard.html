@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مشوار — لوحة تحكم المعرض</title>
+  <meta name="description" content="إدارة سياراتك وطلبات الحجز من خلال لوحة تحكم معرضك على منصة مشوار."/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .dash-layout { display:grid; grid-template-columns: 2fr 1.5fr; gap:1.75rem; align-items:start; }
+    @media(max-width:768px) { .dash-layout { grid-template-columns:1fr; } }
+
+    .dash-section {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius-md);
+      overflow:hidden;
+    }
+    .dash-section__head {
+      padding:.9rem 1.15rem;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:var(--surface-2);
+    }
+    .dash-section__title { font-weight:700; font-size:.95rem; }
+    .dash-section__body { padding:1.1rem; }
+
+    .car-list-item {
+      display:flex; gap:.85rem; align-items:center;
+      padding:.8rem;
+      border:1px solid var(--border);
+      border-radius:var(--radius-sm);
+      margin-bottom:.6rem;
+      background:var(--surface);
+      transition: box-shadow var(--transition);
+    }
+    .car-list-item:hover { box-shadow:var(--shadow-sm); }
+    .car-list-item__thumb { width:72px; height:52px; border-radius:var(--radius-sm); object-fit:cover; flex-shrink:0; }
+    .car-list-item__body { flex:1; }
+    .car-list-item__name { font-weight:700; font-size:.88rem; }
+    .car-list-item__meta { font-size:.77rem; color:var(--text-2); margin-top:.1rem; }
+
+    .add-car-form { display:grid; grid-template-columns:1fr 1fr; gap:.85rem; }
+    @media(max-width:480px) { .add-car-form { grid-template-columns:1fr; } }
+
+    .sidebar-dash {
+      position: sticky;
+      top: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* dash sidebar badge */
+    .dash-user {
+      display:flex; align-items:center; gap:.75rem;
+    }
+    .dash-user__avatar {
+      width:44px; height:44px; border-radius:50%;
+      background:var(--primary-dim); color:var(--primary);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:1.1rem; flex-shrink:0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="container container--wide">
+    <div class="navbar__inner">
+      <a href="index.html" class="navbar__logo">مشوار<span class="navbar__logo-dot"></span></a>
+      <div style="display:flex;align-items:center;gap:.75rem;font-size:.85rem;color:var(--text-2);">
+        <span>لوحة التحكم</span>
+        <span style="color:var(--border);">|</span>
+        <strong style="color:var(--text-1);">معرض الجيزة للسيارات</strong>
+      </div>
+      <div class="navbar__actions">
+        <button class="dark-toggle" id="dark-toggle" aria-label="تبديل الوضع الليلي">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79z"/></svg>
+        </button>
+        <a href="index.html" class="btn btn--ghost btn--sm">العودة للموقع</a>
+        <button class="btn btn--outline btn--sm" onclick="if(confirm('تأكيد تسجيل الخروج؟')) location.href='index.html'">خروج</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main style="padding-block:2rem 4rem;">
+  <div class="container container--wide">
+
+    <!-- TOP STATS ROW -->
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.75rem;">
+      <div class="stat-card stat-card--secondary">
+        <div class="stat-card__label">
+          <svg class="icon icon--sm" style="display:inline;vertical-align:-.15em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          السيارات المتاحة
+        </div>
+        <div class="stat-card__value">4</div>
+        <div class="stat-card__sub">من أصل <span class="num">6</span> سيارات إجمالي</div>
+      </div>
+      <div class="stat-card" style="--val-color:var(--primary);">
+        <div class="stat-card__label">
+          <svg class="icon icon--sm" style="display:inline;vertical-align:-.15em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          طلبات قيد الانتظار
+        </div>
+        <div class="stat-card__value" style="color:var(--primary);">3</div>
+        <div class="stat-card__sub">تحتاج ردّ منك</div>
+      </div>
+      <div class="stat-card stat-card--success">
+        <div class="stat-card__label">
+          <svg class="icon icon--sm" style="display:inline;vertical-align:-.15em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          حجوزات مؤكدة هذا الشهر
+        </div>
+        <div class="stat-card__value">12</div>
+        <div class="stat-card__sub">↑ بزيادة <span class="num">+3</span> عن الشهر الماضي</div>
+      </div>
+    </div>
+
+    <!-- ROAD DIVIDER -->
+    <hr class="road-divider" style="margin-block:0 1.75rem;"/>
+
+    <!-- MAIN LAYOUT -->
+    <div class="dash-layout">
+
+      <!-- LEFT COLUMN: My Cars -->
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+
+        <!-- Add Car Form -->
+        <div class="dash-section">
+          <div class="dash-section__head">
+            <span class="dash-section__title">
+              <svg class="icon icon--sm" style="display:inline;vertical-align:-.15em;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              إضافة سيارة جديدة
+            </span>
+            <button class="btn btn--ghost btn--sm" id="toggle-add-form">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              توسيع
+            </button>
+          </div>
+          <div class="dash-section__body" id="add-car-panel" style="display:none;">
+            <form class="add-car-form" onsubmit="addCar(event)">
+              <div class="form-group" style="grid-column:1/-1;">
+                <label class="form-label">اسم ونوع السيارة</label>
+                <input type="text" class="form-input" placeholder="مثال: تويوتا كامري ٢٠٢٤" id="new-car-name" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">نوع السيارة</label>
+                <select class="form-select" id="new-car-type">
+                  <option>سيدان</option><option>SUV</option><option>ميكروباص</option><option>بيك أب</option><option>هاتشباك</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ناقل الحركة</label>
+                <select class="form-select" id="new-car-trans">
+                  <option>أوتوماتيك</option><option>يدوي</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">السعر اليومي (جنيه)</label>
+                <input type="number" class="form-input" placeholder="650" id="new-car-price" min="0" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">عدد الركاب</label>
+                <select class="form-select" id="new-car-seats">
+                  <option>4</option><option>5</option><option>7</option><option>9</option><option>12</option>
+                </select>
+              </div>
+              <div class="form-group" style="grid-column:1/-1;">
+                <button type="submit" class="btn btn--primary btn--block">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  إضافة السيارة
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Car List -->
+        <div class="dash-section">
+          <div class="dash-section__head">
+            <span class="dash-section__title">سياراتي (<span class="num" id="car-count">6</span>)</span>
+            <div style="display:flex;gap:.5rem;">
+              <button class="btn btn--ghost btn--sm">فلتر</button>
+            </div>
+          </div>
+          <div class="dash-section__body" id="car-list">
+
+            <!-- Car item 1 -->
+            <div class="car-list-item">
+              <img class="car-list-item__thumb" src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=160&q=70" alt="تويوتا كامري"/>
+              <div class="car-list-item__body">
+                <div class="car-list-item__name">تويوتا كامري ٢٠٢٤</div>
+                <div class="car-list-item__meta">سيدان · أوتوماتيك · <span class="num">5</span> ركاب</div>
+                <div class="num" style="font-size:.85rem;color:var(--primary);margin-top:.15rem;">650 جنيه/يوم</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+                <span class="plate plate--available"><span class="plate__label">متاح</span></span>
+                <label class="toggle">
+                  <input type="checkbox" checked onchange="toggleCar(this,0)"/>
+                  <div class="toggle__track"><div class="toggle__thumb"></div></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Car item 2 -->
+            <div class="car-list-item">
+              <img class="car-list-item__thumb" src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=160&q=70" alt="هيونداي توسان"/>
+              <div class="car-list-item__body">
+                <div class="car-list-item__name">هيونداي توسان ٢٠٢٣</div>
+                <div class="car-list-item__meta">SUV · أوتوماتيك · <span class="num">5</span> ركاب</div>
+                <div class="num" style="font-size:.85rem;color:var(--primary);margin-top:.15rem;">850 جنيه/يوم</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+                <span class="plate plate--rented"><span class="plate__label">مؤجّر</span></span>
+                <label class="toggle">
+                  <input type="checkbox" onchange="toggleCar(this,1)"/>
+                  <div class="toggle__track"><div class="toggle__thumb"></div></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Car 3 -->
+            <div class="car-list-item">
+              <img class="car-list-item__thumb" src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=160&q=70" alt="كيا سيراتو"/>
+              <div class="car-list-item__body">
+                <div class="car-list-item__name">كيا سيراتو ٢٠٢٤</div>
+                <div class="car-list-item__meta">سيدان · أوتوماتيك · <span class="num">5</span> ركاب</div>
+                <div class="num" style="font-size:.85rem;color:var(--primary);margin-top:.15rem;">550 جنيه/يوم</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+                <span class="plate plate--available" id="badge-2"><span class="plate__label">متاح</span></span>
+                <label class="toggle">
+                  <input type="checkbox" checked onchange="toggleCar(this,2)"/>
+                  <div class="toggle__track"><div class="toggle__thumb"></div></div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Car 4 -->
+            <div class="car-list-item">
+              <img class="car-list-item__thumb" src="https://images.unsplash.com/photo-1617531653332-bd46c16f4d68?w=160&q=70" alt="نيسان صني"/>
+              <div class="car-list-item__body">
+                <div class="car-list-item__name">نيسان صني ٢٠٢٣</div>
+                <div class="car-list-item__meta">سيدان · يدوي · <span class="num">5</span> ركاب</div>
+                <div class="num" style="font-size:.85rem;color:var(--primary);margin-top:.15rem;">450 جنيه/يوم</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+                <span class="plate plate--available"><span class="plate__label">متاح</span></span>
+                <label class="toggle">
+                  <input type="checkbox" checked onchange="toggleCar(this,3)"/>
+                  <div class="toggle__track"><div class="toggle__thumb"></div></div>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Booking Requests -->
+      <div class="sidebar-dash">
+        <div class="dash-section">
+          <div class="dash-section__head">
+            <span class="dash-section__title">
+              طلبات الحجز
+              <span class="num" style="font-size:.75rem;background:var(--primary-dim);color:var(--primary);padding:.1rem .5rem;border-radius:99px;margin-right:.35rem;">3</span>
+            </span>
+            <div class="tabs" style="margin-bottom:0;border:none;gap:0;">
+              <button class="tab-btn active btn--sm" style="padding:.35rem .75rem;font-size:.78rem;" onclick="filterRequests('pending',this)">انتظار</button>
+              <button class="tab-btn btn--sm" style="padding:.35rem .75rem;font-size:.78rem;" onclick="filterRequests('all',this)">الكل</button>
+            </div>
+          </div>
+          <div class="dash-section__body" style="display:flex;flex-direction:column;gap:.85rem;" id="requests-list">
+
+            <!-- Request 1: PENDING -->
+            <div class="request-card" data-req="pending">
+              <div class="request-card__header">
+                <div>
+                  <div class="request-card__customer">أحمد محمد علي</div>
+                  <div style="font-size:.75rem;color:var(--text-3);margin-top:.1rem;">تويوتا كامري ٢٠٢٤</div>
+                </div>
+                <span class="plate plate--pending"><span class="plate__label">انتظار</span></span>
+              </div>
+              <div class="request-card__meta">
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>الغردقة</div>
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="num">15-10-2024</span></div>
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="num">5</span> أيام</div>
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.23a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.46"/></svg><span class="num phone">0112345678</span></div>
+              </div>
+              <div class="request-card__actions">
+                <button class="btn btn--success btn--sm" style="flex:1;" onclick="resolveRequest(this,'confirmed')">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  قبول
+                </button>
+                <button class="btn btn--danger btn--sm" style="flex:1;" onclick="resolveRequest(this,'rejected')">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  رفض
+                </button>
+              </div>
+            </div>
+
+            <!-- Request 2: PENDING -->
+            <div class="request-card" data-req="pending">
+              <div class="request-card__header">
+                <div>
+                  <div class="request-card__customer">سارة إبراهيم</div>
+                  <div style="font-size:.75rem;color:var(--text-3);margin-top:.1rem;">كيا سيراتو ٢٠٢٤</div>
+                </div>
+                <span class="plate plate--pending"><span class="plate__label">انتظار</span></span>
+              </div>
+              <div class="request-card__meta">
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>الإسكندرية</div>
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="num">18-10-2024</span></div>
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="num">3</span> أيام</div>
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2"/></svg><span class="num phone">0109876543</span></div>
+              </div>
+              <div class="request-card__actions">
+                <button class="btn btn--success btn--sm" style="flex:1;" onclick="resolveRequest(this,'confirmed')">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>قبول
+                </button>
+                <button class="btn btn--danger btn--sm" style="flex:1;" onclick="resolveRequest(this,'rejected')">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>رفض
+                </button>
+              </div>
+            </div>
+
+            <!-- Request 3: Confirmed (already resolved) -->
+            <div class="request-card" data-req="confirmed">
+              <div class="request-card__header">
+                <div>
+                  <div class="request-card__customer">محمد عبدالله</div>
+                  <div style="font-size:.75rem;color:var(--text-3);margin-top:.1rem;">نيسان صني ٢٠٢٣</div>
+                </div>
+                <span class="plate plate--confirmed"><span class="plate__label">مؤكد</span></span>
+              </div>
+              <div class="request-card__meta">
+                <div class="request-card__meta-item"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>القاهرة</div>
+                <div class="request-card__meta-item"><span class="num">10-10-2024</span></div>
+                <div class="request-card__meta-item"><span class="num">2</span> أيام</div>
+                <div class="request-card__meta-item" style="grid-column:1/-1;color:var(--success);font-weight:600;font-size:.82rem;">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  تم تأكيد الحجز
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Dealer info card -->
+        <div class="dash-section">
+          <div class="dash-section__head">
+            <span class="dash-section__title">بيانات المعرض</span>
+          </div>
+          <div class="dash-section__body">
+            <div class="dash-user">
+              <div class="dash-user__avatar">م</div>
+              <div>
+                <div style="font-weight:700;">معرض الجيزة للسيارات</div>
+                <div style="font-size:.78rem;color:var(--text-2);">الجيزة، مصر</div>
+              </div>
+            </div>
+            <hr class="road-divider--light road-divider" style="margin-block:.85rem;"/>
+            <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.83rem;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-2);">المدينة</span><span>الجيزة</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-2);">الهاتف</span><span class="num phone">010-1234-5678</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-2);">الحالة</span><span class="plate plate--confirmed" style="font-size:.7rem;"><span class="plate__label">موثّق</span></span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-2);">عضو منذ</span><span class="num">مارس 2024</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+const html = document.documentElement;
+const saved = localStorage.getItem('mishwar-theme');
+if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches)) html.classList.add('dark');
+document.getElementById('dark-toggle').addEventListener('click', () => {
+  html.classList.toggle('dark');
+  localStorage.setItem('mishwar-theme', html.classList.contains('dark') ? 'dark' : 'light');
+});
+
+// Toggle add car form
+document.getElementById('toggle-add-form').addEventListener('click', function() {
+  const panel = document.getElementById('add-car-panel');
+  const isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? 'block' : 'none';
+  this.querySelector('svg').style.transform = isHidden ? 'rotate(180deg)' : '';
+});
+
+function addCar(e) {
+  e.preventDefault();
+  const name = document.getElementById('new-car-name').value;
+  const type = document.getElementById('new-car-type').value;
+  const trans = document.getElementById('new-car-trans').value;
+  const price = document.getElementById('new-car-price').value;
+  const carList = document.getElementById('car-list');
+  const div = document.createElement('div');
+  div.className = 'car-list-item';
+  div.innerHTML = `
+    <div style="width:72px;height:52px;border-radius:var(--radius-sm);background:var(--surface-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.3;"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+    </div>
+    <div class="car-list-item__body">
+      <div class="car-list-item__name">${name}</div>
+      <div class="car-list-item__meta">${type} · ${trans} · <span class="num">5</span> ركاب</div>
+      <div class="num" style="font-size:.85rem;color:var(--primary);margin-top:.15rem;">${price} جنيه/يوم</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;">
+      <span class="plate plate--available"><span class="plate__label">متاح</span></span>
+      <label class="toggle"><input type="checkbox" checked/><div class="toggle__track"><div class="toggle__thumb"></div></div></label>
+    </div>`;
+  carList.appendChild(div);
+  document.getElementById('car-count').textContent = carList.querySelectorAll('.car-list-item').length;
+  e.target.reset();
+  document.getElementById('add-car-panel').style.display = 'none';
+}
+
+function resolveRequest(btn, status) {
+  const card = btn.closest('.request-card');
+  card.dataset.req = status;
+  const badge = card.querySelector('.plate');
+  badge.className = 'plate plate--' + status;
+  badge.querySelector('.plate__label').textContent = status === 'confirmed' ? 'مؤكد' : 'مرفوض';
+  const actions = card.querySelector('.request-card__actions');
+  actions.innerHTML = `<div style="font-size:.83rem;color:var(--${status==='confirmed'?'success':'danger'});display:flex;align-items:center;gap:.4rem;padding:.2rem 0;font-weight:600;">
+    <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${status==='confirmed'?'<polyline points="20 6 9 17 4 12"/>':'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'}
+    </svg>${status==='confirmed'?'تم قبول الطلب':'تم رفض الطلب'}</div>`;
+}
+
+function filterRequests(f, btn) {
+  document.querySelectorAll('[onclick^="filterRequests"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#requests-list .request-card').forEach(c => {
+    c.style.display = (f === 'all' || c.dataset.req === f) ? '' : 'none';
+  });
+}
+
+function toggleCar(chk, idx) {
+  const item = chk.closest('.car-list-item');
+  const badge = item.querySelector('.plate');
+  if (chk.checked) {
+    badge.className = 'plate plate--available';
+    badge.querySelector('.plate__label').textContent = 'متاح';
+  } else {
+    badge.className = 'plate plate--rented';
+    badge.querySelector('.plate__label').textContent = 'مؤجّر';
+  }
+}
+</script>
+</body>
+</html>

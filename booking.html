@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مشوار — تأكيد الحجز</title>
+  <meta name="description" content="احجز سيارتك على منصة مشوار في ثلاث خطوات بسيطة وسريعة."/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .booking-layout { display: grid; grid-template-columns: 1fr 380px; gap: 1.75rem; align-items: start; }
+    @media (max-width:768px) { .booking-layout { grid-template-columns: 1fr; } }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: fadein .3s ease; }
+    @keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    .summary-sticky {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      position: sticky;
+      top: 80px;
+    }
+    .summary-sticky__img { width:100%; aspect-ratio:16/9; object-fit:cover; }
+    .summary-sticky__body { padding: 1rem 1.1rem; }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+    }
+
+    .info-row { display:flex; gap:.5rem; align-items:center; font-size:.84rem; color:var(--text-2); margin-bottom:.35rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="navbar">
+  <div class="container">
+    <div class="navbar__inner">
+      <a href="index.html" class="navbar__logo">مشوار<span class="navbar__logo-dot"></span></a>
+      <ul class="navbar__nav">
+        <li><a href="index.html">الرئيسية</a></li>
+        <li><a href="browse.html" class="active">السيارات</a></li>
+      </ul>
+      <div class="navbar__actions">
+        <button class="dark-toggle" id="dark-toggle" aria-label="تبديل الوضع الليلي">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 1 0 9.79 9.79z"/></svg>
+        </button>
+        <a href="my-bookings.html" class="btn btn--ghost btn--sm">حجوزاتي</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main style="padding-block:2.5rem 4rem;">
+  <div class="container">
+
+    <!-- STEP PROGRESS -->
+    <div class="step-progress" id="step-progress">
+      <div class="step-progress__item active" id="prog-1">
+        <div class="step-progress__circle">1</div>
+        <div class="step-progress__label">ملخص السيارة</div>
+      </div>
+      <div class="step-progress__line" id="line-1"></div>
+      <div class="step-progress__item" id="prog-2">
+        <div class="step-progress__circle">2</div>
+        <div class="step-progress__label">تفاصيل الرحلة</div>
+      </div>
+      <div class="step-progress__line" id="line-2"></div>
+      <div class="step-progress__item" id="prog-3">
+        <div class="step-progress__circle">3</div>
+        <div class="step-progress__label">التأكيد</div>
+      </div>
+    </div>
+
+    <div class="booking-layout">
+      <!-- LEFT: Step panels -->
+      <div>
+
+        <!-- ── STEP 1: Car Summary ── -->
+        <div class="step-panel active" id="step-1">
+          <div class="step-card">
+            <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:1.25rem;">السيارة المختارة</h2>
+
+            <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1.25rem;">
+              <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=260&q=75" alt="تويوتا كامري" style="width:130px;height:85px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0;"/>
+              <div>
+                <h3 style="font-weight:800;font-size:1.05rem;">تويوتا كامري ٢٠٢٤</h3>
+                <div class="info-row"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 4v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>سيدان — أوتوماتيك</div>
+                <div class="info-row"><svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>معرض الجيزة للسيارات — الجيزة</div>
+                <span class="plate plate--available" style="margin-top:.4rem;"><span class="plate__label">متاح</span></span>
+              </div>
+            </div>
+
+            <hr class="road-divider--light road-divider" style="margin-block:1rem;"/>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+              <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:.8rem;">
+                <div style="font-size:.72rem;color:var(--text-3);margin-bottom:.2rem;">السعر اليومي</div>
+                <div class="num" style="font-size:1.3rem;font-weight:600;color:var(--primary);">650 <span style="font-size:.75rem;color:var(--text-3);">جنيه</span></div>
+              </div>
+              <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:.8rem;">
+                <div style="font-size:.72rem;color:var(--text-3);margin-bottom:.2rem;">ناقل الحركة</div>
+                <div style="font-size:.9rem;font-weight:700;">أوتوماتيك</div>
+              </div>
+              <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:.8rem;">
+                <div style="font-size:.72rem;color:var(--text-3);margin-bottom:.2rem;">عدد الركاب</div>
+                <div class="num" style="font-size:.9rem;font-weight:700;">5</div>
+              </div>
+              <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:.8rem;">
+                <div style="font-size:.72rem;color:var(--text-3);margin-bottom:.2rem;">الوقود</div>
+                <div style="font-size:.9rem;font-weight:700;">بنزين</div>
+              </div>
+            </div>
+
+            <div class="info-strip mt-3">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              لا يوجد دفع مقدم — الدفع يتم مباشرة مع المعرض عند الاستلام.
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-3">
+            <a href="browse.html" class="btn btn--ghost">← رجوع للسيارات</a>
+            <button class="btn btn--primary" onclick="goStep(2)">التالي — تفاصيل الرحلة ←</button>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: Trip Details ── -->
+        <div class="step-panel" id="step-2">
+          <div class="step-card">
+            <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:1.5rem;">تفاصيل الرحلة</h2>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+              <div class="form-group" style="grid-column:1/-1;">
+                <label class="form-label" for="dest-city">المدينة الوجهة</label>
+                <select class="form-select" id="dest-city">
+                  <option value="">اختر الوجهة</option>
+                  <option>القاهرة</option>
+                  <option>الإسكندرية</option>
+                  <option>شرم الشيخ</option>
+                  <option>الغردقة</option>
+                  <option>أسوان</option>
+                  <option>الأقصر</option>
+                  <option>مرسى مطروح</option>
+                  <option>البحر الأحمر</option>
+                  <option>سيناء</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="trip-start">تاريخ الاستلام</label>
+                <input type="date" class="form-input" id="trip-start"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="trip-end">تاريخ الإرجاع</label>
+                <input type="date" class="form-input" id="trip-end"/>
+              </div>
+
+              <div class="form-group" style="grid-column:1/-1;">
+                <label class="form-label" for="cust-name">اسمك</label>
+                <input type="text" class="form-input" id="cust-name" placeholder="الاسم بالكامل"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cust-phone">رقم الهاتف</label>
+                <input type="tel" class="form-input" id="cust-phone" placeholder="01xxxxxxxxx" style="direction:ltr;text-align:right;"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="trip-type">طبيعة الرحلة</label>
+                <select class="form-select" id="trip-type">
+                  <option>سياحة</option>
+                  <option>عمل</option>
+                  <option>عيلة</option>
+                  <option>أخرى</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="grid-column:1/-1;">
+                <label class="form-label" for="trip-notes">ملاحظات إضافية (اختياري)</label>
+                <textarea class="form-textarea" id="trip-notes" rows="3" placeholder="أي تفاصيل تريد إيصالها للمعرض..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-3">
+            <button class="btn btn--ghost" onclick="goStep(1)">← رجوع</button>
+            <button class="btn btn--primary" onclick="goStep(3); calcPrice()">التالي — مراجعة وتأكيد ←</button>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: Confirm ── -->
+        <div class="step-panel" id="step-3">
+
+          <!-- DIGITAL READOUT PANEL -->
+          <div class="digital-panel mb-3">
+            <p style="font-size:.75rem;color:#9CA3AF;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem;">ملخص التكلفة</p>
+            <div class="digital-panel__row">
+              <div>
+                <div class="digital-panel__label">إجمالي الأيام</div>
+                <div class="digital-panel__value" id="days-display">5</div>
+                <div style="font-size:.72rem;color:#6B7280;margin-top:.15rem;">يوم</div>
+              </div>
+              <div>
+                <div class="digital-panel__label">سعر اليوم</div>
+                <div class="digital-panel__value" style="font-size:1.5rem;">650</div>
+                <div style="font-size:.72rem;color:#6B7280;margin-top:.15rem;">جنيه</div>
+              </div>
+              <div>
+                <div class="digital-panel__label">المسافة التقديرية</div>
+                <div class="digital-panel__value" style="font-size:1.5rem;" id="dist-display">460</div>
+                <div style="font-size:.72rem;color:#6B7280;margin-top:.15rem;">كم</div>
+              </div>
+            </div>
+            <div class="digital-panel__sep"></div>
+            <div class="digital-panel__row">
+              <div>
+                <div class="digital-panel__label">الإجمالي المتوقع</div>
+                <div class="digital-panel__value" id="total-display">3,250</div>
+                <div style="font-size:.72rem;color:#6B7280;margin-top:.15rem;">جنيه مصري</div>
+              </div>
+              <div style="text-align:left;">
+                <div class="digital-panel__label">الوجهة</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:1rem;color:#E8EAED;direction:rtl;" id="dest-display">الغردقة</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:1.25rem;">مراجعة بيانات الحجز</h2>
+
+            <div style="display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.25rem;">
+              <div style="display:flex;justify-content:space-between;font-size:.9rem;">
+                <span style="color:var(--text-2);">السيارة</span>
+                <span style="font-weight:700;">تويوتا كامري ٢٠٢٤</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.9rem;">
+                <span style="color:var(--text-2);">المعرض</span>
+                <span style="font-weight:700;">معرض الجيزة للسيارات</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.9rem;">
+                <span style="color:var(--text-2);">الوجهة</span>
+                <span style="font-weight:700;" id="confirm-dest">الغردقة</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.9rem;">
+                <span style="color:var(--text-2);">مدة الرحلة</span>
+                <span class="num" style="font-weight:700;" id="confirm-days">5 يوم</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:.9rem;">
+                <span style="color:var(--text-2);">إجمالي التكلفة</span>
+                <span class="num" style="font-weight:800;color:var(--primary);font-size:1.05rem;" id="confirm-total">3,250 جنيه</span>
+              </div>
+            </div>
+
+            <hr class="road-divider--light road-divider" style="margin-block:.75rem;"/>
+
+            <div style="display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.25rem;">
+              <label class="check-wrap">
+                <input type="checkbox" id="terms-check" onchange="validateStep3()"/>
+                <span class="check-wrap__label">أوافق على <a href="#" style="color:var(--secondary);">شروط وأحكام</a> منصة مشوار وأن الدفع سيتم مع المعرض مباشرة.</span>
+              </label>
+              <label class="check-wrap">
+                <input type="checkbox" id="age-check" onchange="validateStep3()"/>
+                <span class="check-wrap__label">أقرّ بأني أبلغ من العمر ٢١ سنة فأكثر وأملك رخصة قيادة سارية.</span>
+              </label>
+            </div>
+
+            <button class="btn btn--primary btn--block btn--lg" id="confirm-btn" disabled onclick="submitBooking()">
+              <svg class="icon icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.006-.127-1.984-.382-2.916z"/></svg>
+              تأكيد الحجز وإرسال الطلب
+            </button>
+            <p style="font-size:.75rem;color:var(--text-3);text-align:center;margin-top:.6rem;">سيتم إشعارك فور قبول المعرض لطلبك</p>
+          </div>
+
+          <div class="flex justify-between mt-3">
+            <button class="btn btn--ghost" onclick="goStep(2)">← رجوع</button>
+          </div>
+        </div>
+
+        <!-- ── SUCCESS STATE ── -->
+        <div class="step-panel" id="step-success">
+          <div class="step-card text-center" style="padding:3rem 2rem;">
+            <div style="width:72px;height:72px;border-radius:50%;background:var(--success-dim);color:var(--success);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+              <svg class="icon icon--lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-1.006-.127-1.984-.382-2.916z"/></svg>
+            </div>
+            <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:.65rem;">تم إرسال طلب الحجز!</h2>
+            <p style="color:var(--text-2);max-width:38ch;margin-inline:auto;line-height:1.8;margin-bottom:1.5rem;">طلبك وصل للمعرض وهيتم الرد عليك في أقرب وقت. هتلاقي حالة الطلب في صفحة حجوزاتي.</p>
+            <span class="plate plate--pending" style="margin-bottom:1.5rem;display:inline-flex;"><span class="plate__label">قيد الانتظار</span></span>
+            <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;">
+              <a href="my-bookings.html" class="btn btn--primary">شوف حجوزاتي</a>
+              <a href="browse.html" class="btn btn--outline">تصفّح سيارات أخرى</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Sticky summary (shown on steps 2 & 3) -->
+      <div>
+        <div class="summary-sticky" id="side-summary" style="display:none;">
+          <img class="summary-sticky__img" src="https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=70" alt="تويوتا كامري"/>
+          <div class="summary-sticky__body">
+            <h3 style="font-weight:800;margin-bottom:.4rem;">تويوتا كامري ٢٠٢٤</h3>
+            <p style="font-size:.83rem;color:var(--text-2);margin-bottom:.75rem;">معرض الجيزة للسيارات — الجيزة</p>
+            <hr class="road-divider--light road-divider" style="margin-block:.6rem;"/>
+            <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.35rem;">
+              <span style="color:var(--text-2);">السعر اليومي</span>
+              <span class="num" style="font-weight:700;">650 جنيه</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.35rem;" id="side-days-row" style="display:none;">
+              <span style="color:var(--text-2);">عدد الأيام</span>
+              <span class="num" style="font-weight:700;" id="side-days">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:.9rem;font-weight:800;border-top:1px solid var(--border);padding-top:.65rem;margin-top:.65rem;">
+              <span>الإجمالي</span>
+              <span class="num" style="color:var(--primary);" id="side-total">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info card on step 1 -->
+        <div id="side-info" class="step-card">
+          <p style="font-weight:700;font-size:.95rem;margin-bottom:.75rem;">لماذا مشوار؟</p>
+          <div style="display:flex;flex-direction:column;gap:.65rem;">
+            <div style="display:flex;gap:.6rem;align-items:center;font-size:.83rem;color:var(--text-2);">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--success-dim);color:var(--success);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12"><polyline points="20 6 9 17 4 12"/></svg></div>
+              بدون دفع مقدم
+            </div>
+            <div style="display:flex;gap:.6rem;align-items:center;font-size:.83rem;color:var(--text-2);">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--success-dim);color:var(--success);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12"><polyline points="20 6 9 17 4 12"/></svg></div>
+              معارض موثّقة ومضمونة
+            </div>
+            <div style="display:flex;gap:.6rem;align-items:center;font-size:.83rem;color:var(--text-2);">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--success-dim);color:var(--success);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12"><polyline points="20 6 9 17 4 12"/></svg></div>
+              رد سريع خلال ٢٤ ساعة
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const html = document.documentElement;
+const saved = localStorage.getItem('mishwar-theme');
+if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches)) html.classList.add('dark');
+document.getElementById('dark-toggle').addEventListener('click', () => {
+  html.classList.toggle('dark');
+  localStorage.setItem('mishwar-theme', html.classList.contains('dark') ? 'dark' : 'light');
+});
+
+let currentStep = 1;
+
+function goStep(n) {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  currentStep = n;
+
+  // Update progress bar
+  for (let i = 1; i <= 3; i++) {
+    const item = document.getElementById('prog-' + i);
+    item.classList.remove('active', 'done');
+    if (i < n) item.classList.add('done');
+    else if (i === n) item.classList.add('active');
+    // Update circles to checkmark when done
+    const circle = item.querySelector('.step-progress__circle');
+    if (i < n) circle.innerHTML = '✓';
+    else circle.textContent = i;
+  }
+  for (let i = 1; i <= 2; i++) {
+    const line = document.getElementById('line-' + i);
+    line.classList.toggle('done', i < n);
+  }
+
+  // Sidebar
+  const summary = document.getElementById('side-summary');
+  const info = document.getElementById('side-info');
+  if (n > 1) { summary.style.display = 'block'; info.style.display = 'none'; }
+  else { summary.style.display = 'none'; info.style.display = 'block'; }
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function calcPrice() {
+  const dest = document.getElementById('dest-city').value || 'الغردقة';
+  const start = new Date(document.getElementById('trip-start').value);
+  const end   = new Date(document.getElementById('trip-end').value);
+  let days = isNaN(start) || isNaN(end) ? 5 : Math.max(1, Math.round((end - start) / 86400000));
+  const total = days * 650;
+  const distMap = {'القاهرة':160,'الإسكندرية':220,'شرم الشيخ':480,'الغردقة':500,'أسوان':900,'الأقصر':750,'مرسى مطروح':350,'البحر الأحمر':500,'سيناء':430};
+  const dist = distMap[dest] || 460;
+
+  document.getElementById('days-display').textContent = days;
+  document.getElementById('dist-display').textContent = dist;
+  document.getElementById('total-display').textContent = total.toLocaleString();
+  document.getElementById('dest-display').textContent = dest;
+  document.getElementById('confirm-dest').textContent = dest;
+  document.getElementById('confirm-days').textContent = days + ' يوم';
+  document.getElementById('confirm-total').textContent = total.toLocaleString() + ' جنيه';
+  document.getElementById('side-days').textContent = days;
+  document.getElementById('side-total').textContent = total.toLocaleString() + ' جنيه';
+}
+
+function validateStep3() {
+  const t = document.getElementById('terms-check').checked;
+  const a = document.getElementById('age-check').checked;
+  document.getElementById('confirm-btn').disabled = !(t && a);
+}
+
+function submitBooking() {
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step-success').classList.add('active');
+  document.getElementById('side-summary').style.display = 'none';
+  document.getElementById('step-progress').style.display = 'none';
+}
+</script>
+</body>
+</html>

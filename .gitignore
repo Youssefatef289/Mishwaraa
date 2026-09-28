@@ -1,37 +1,12 @@
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+node_modules/
+build/
+dist/
+coverage/
 .DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-dev-server.log
-dev-server-err.log
-
-# local env files
-.env
-.env.local
-.env*.local
-
-# vercel
-.vercel
-
-# typescript
+*.log
+.env*
+!.env.example
+**/.next/
+**/.tmp-http/
 *.tsbuildinfo
-
-# local tooling
-.kilo/
+dev.err

@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Mono:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
+@tailwind base; @tailwind components; @tailwind utilities;
+:root{--bg:#EDEFF2;--surface:#fff;--surface-2:#F5F6F8;--text:#1B1F27;--dim:#5B6472;--border:#DADFE5;--amber:#C97A1E;--teal:#186E6E;--red:#B23B31;--green:#227A50}[data-theme='dark']{--bg:#14171C;--surface:#1E222A;--surface-2:#262B34;--text:#EDEFF3;--dim:#97A0AC;--border:#333944;--amber:#F2A93C;--teal:#3AA6A6;--red:#E2574C;--green:#4CAF7D}@media(prefers-color-scheme:dark){:root:not([data-theme='light']){--bg:#14171C;--surface:#1E222A;--surface-2:#262B34;--text:#EDEFF3;--dim:#97A0AC;--border:#333944;--amber:#F2A93C;--teal:#3AA6A6;--red:#E2574C;--green:#4CAF7D}}
+@layer base{*{border-color:var(--border)}body{@apply min-h-screen; background:var(--bg);color:var(--text);font-family:Tajawal,sans-serif;line-height:1.7}input,select{@apply w-full rounded-lg border px-3 py-2; background:var(--surface);color:var(--text)}button{@apply rounded-lg px-4 py-2 font-bold transition disabled:cursor-not-allowed disabled:opacity-50}}
+@layer components{.surface{@apply rounded-lg border; background:var(--surface);box-shadow:0 4px 14px rgb(27 31 39/.06)}.road-divider{height:2px;background:repeating-linear-gradient(90deg,var(--amber) 0 26px,transparent 26px 43px)}.digital{font-family:'JetBrains Mono',monospace;direction:ltr;unicode-bidi:embed}.plate{@apply inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-bold; font-family:'JetBrains Mono',monospace}.plate::before,.plate::after{content:'';width:3px;height:3px;border-radius:50%;background:currentColor;opacity:.7}.plate-pending,.plate-rented{color:var(--dim)}.plate-confirmed{color:var(--green)}.plate-rejected{color:var(--red)}.plate-available{color:var(--teal)}.primary{background:var(--amber);color:#fff}.secondary{border:1px solid var(--teal);background:transparent;color:var(--teal)}.danger{background:var(--red);color:#fff}.new-booking{animation:newBooking 1.8s ease-out}@keyframes newBooking{0%{box-shadow:0 0 0 3px var(--amber)}100%{box-shadow:none}}}
+/* ============ Sayaarataa interactive experience (/demo) ============ */
+.cluster-font{font-family:'Space Mono',monospace;direction:ltr;unicode-bidi:embed}
+.ticker-track{display:flex;gap:3rem;white-space:nowrap;animation:tickerScroll 30s linear infinite;width:max-content}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(50%)}}
+.scan-line{background:repeating-linear-gradient(90deg,var(--teal) 0 12px,transparent 12px 24px);height:2px;opacity:.55}
+.road-strip{background:repeating-linear-gradient(90deg,var(--amber) 0 26px,transparent 26px 46px);height:2px}
+.radar-sweep{transform-origin:center;animation:radarSweep 3s linear infinite}
+@keyframes radarSweep{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.radar-ring{animation:radarRing 2.6s ease-out infinite}
+@keyframes radarRing{0%{transform:scale(.4);opacity:.85}100%{transform:scale(1.7);opacity:0}}
+.pulse-glow{animation:pulseGlow 2.2s ease-in-out infinite}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(58,166,166,.45)}50%{box-shadow:0 0 0 10px rgba(58,166,166,0)}}
+.btn-shine{position:relative;overflow:hidden}
+.btn-shine::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 33%,rgba(255,255,255,.5) 50%,transparent 67%);transform:translateX(-130%);animation:shineSweep 2.8s ease infinite;pointer-events:none}
+@keyframes shineSweep{0%,60%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+.cluster-grid{background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:22px 22px}
+.map-grid{background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:28px 28px}
+.route-dash{stroke-dasharray:7 9;animation:dashMove 1.5s linear infinite}
+@keyframes dashMove{to{stroke-dashoffset:-32}}
+.fade-up{animation:fadeUp .45s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.screen-enter{animation:screenEnter .35s ease both}
+@keyframes screenEnter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.meter-fill{animation:meterGrow 1.3s cubic-bezier(.2,.7,.2,1) both}
+@keyframes meterGrow{from{width:0%}}
+.phone-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;font-weight:700;flex:1;padding:6px 2px 4px;border-radius:10px;color:var(--dim)}
+.phone-nav-btn[data-active='true']{color:var(--amber);background:var(--surface-2)}
+.demo-scroll::-webkit-scrollbar{width:6px;height:6px}
+.demo-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.demo-scroll::-webkit-scrollbar-track{background:transparent}

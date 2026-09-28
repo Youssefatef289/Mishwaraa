@@ -1,0 +1,169 @@
+{
+  "info": {
+    "name": "Mishwar API",
+    "_postman_id": "a1b2c3d4-0000-0000-0000-00000000api1",
+    "description": "REST API layer لمشروع مشوار. كل الطلبات اللي محتاجة تسجيل دخول بتحتاج الرأس `Authorization: Bearer <token>`.\n\nالقواعد:\n- شكل الخطأ موحّد: `{ \"error\": { \"code\", \"message\" } }`.\n- متغيرات البيئة: `baseUrl`, `customerToken`, `dealerToken`, `carId`, `bookingId`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health — فحص الاتصال",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cars",
+      "item": [
+        {
+          "name": "GET /api/cars — كل العربيات المتاحة",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cars"
+          }
+        },
+        {
+          "name": "GET /api/cars?city=Cairo — فلترة بالمدينة",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cars?city=Cairo"
+          }
+        },
+        {
+          "name": "GET /api/cars?type=bad — فشل متوقع (422)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cars?type=yacht"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quote",
+      "item": [
+        {
+          "name": "POST /api/quote — حساب اقتباس",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"carId\": \"{{carId}}\",\n    \"destinationCity\": \"Alexandria\",\n    \"days\": 3\n}"
+            },
+            "url": "{{baseUrl}}/api/quote"
+          }
+        },
+        {
+          "name": "POST /api/quote — فشل متوقع (422 نقص days)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"carId\": \"{{carId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/quote"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "POST /api/bookings — إنشاء حجز (customerToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"carId\": \"{{carId}}\",\n    \"destination\": \"Alexandria\",\n    \"days\": 3,\n    \"startDate\": \"2026-11-01\",\n    \"terms\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        },
+        {
+          "name": "POST /api/bookings — بدون توكن (فشل متوقع 401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"carId\": \"{{carId}}\",\n    \"destination\": \"Alexandria\",\n    \"days\": 3,\n    \"startDate\": \"2026-11-01\",\n    \"terms\": true\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings"
+          }
+        },
+        {
+          "name": "GET /api/bookings/{{bookingId}} — العميل صاحب الحجز (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "GET /api/bookings/{{bookingId}} — معرض مش طرف (فشل متوقع 404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dealerToken}}", "type": "text" }
+            ],
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}"
+          }
+        },
+        {
+          "name": "POST /api/bookings/{{bookingId}}/respond — تأكيد من المعرض (dealerToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{dealerToken}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"confirmed\"\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}/respond"
+          }
+        },
+        {
+          "name": "POST /api/bookings/{{bookingId}}/respond — عميل مش معرض (فشل متوقع 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customerToken}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"confirmed\"\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}/respond"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "مشوار | Mishwar - منصة تأجير السيارات المعتمدة في مصر",
+  "description": "منصة حجز واستئجار السيارات الموثوقة الأولى في مصر بربط مباشر مع أفضل معارض السيارات وفحص رقمي وتأمين شامل للطرق السريعة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

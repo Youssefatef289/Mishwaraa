@@ -1,1 +1,15 @@
-{"editor.formatOnSave":true,"editor.defaultFormatter":"esbenp.prettier-vscode","editor.fontFamily":"'Tajawal', 'Cascadia Code', Consolas, monospace","editor.rulers":[100],"tailwindCSS.classAttributes":["class","className",".*ClassName"]}
+{
+   "editor.formatOnSave": true,
+   "editor.defaultFormatter": "esbenp.prettier-vscode",
+   "editor.fontFamily": "'Tajawal', 'Cascadia Code', Consolas, monospace",
+   "editor.rulers": [
+      100
+   ],
+   "tailwindCSS.classAttributes": [
+      "class",
+      "className",
+      ".*ClassName"
+   ],
+   "editor.fontSize": 12,
+   "editor.tabSize": 3
+}
