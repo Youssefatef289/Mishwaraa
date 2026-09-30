@@ -22,7 +22,7 @@ function hashNum(s: string): number {
 
 /** تحويل صف سيارة من قاعدة البيانات إلى نوع Car الخاص بالواجهة */
 export function mapCarRow(row: Record<string, any>): Car {
-  const dealer = (row.dealers as Record<string, any> | undefined) ?? {};
+  const dealer = (row.organizations as Record<string, any> | undefined) ?? {};
   const type = (row.type as string) || 'suv';
   const yearMatch = (row.name as string).match(/20\d{2}/);
   const status = (row.status as string) || 'available';
@@ -57,8 +57,8 @@ export async function loadLiveCars(): Promise<Car[] | null> {
   try {
     const { data, error } = await supabase
       .from('cars')
-      .select('*, dealers!inner(name, city, status)')
-      .eq('dealers.status', 'approved')
+      .select('*, organizations!inner(name, city, status)')
+      .eq('organizations.status', 'approved')
       .eq('status', 'available')
       .order('created_at', { ascending: false })
       .limit(10);
@@ -76,17 +76,17 @@ export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerR
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     const { data: dealer } = await supabase
-      .from('dealers')
+      .from('organizations')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('owner_id', user.id)
       .maybeSingle();
     if (!dealer) return null;
     const [{ data: rows, error: carsErr }, { data: pending, error: reqErr }] = await Promise.all([
-      supabase.from('cars').select('*, dealers!inner(name, city, status)').eq('dealer_id', (dealer as Record<string, any>).id),
+      supabase.from('cars').select('*, organizations!inner(name, city, status)').eq('organization_id', (dealer as Record<string, any>).id),
       supabase
         .from('bookings')
         .select('*, cars(name)')
-        .eq('dealer_id', (dealer as Record<string, any>).id)
+        .eq('organization_id', (dealer as Record<string, any>).id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(20),
@@ -123,7 +123,7 @@ export async function loadMyBookings(): Promise<Booking[] | null> {
     if (!user) return null;
     const { data, error } = await supabase
       .from('bookings')
-      .select('*, cars(name), dealers(name, phone)')
+      .select('*, cars(name), organizations(name, phone)')
       .eq('customer_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20);
@@ -189,13 +189,13 @@ export async function persistBooking(input: {
     if (!user) return { ok: false, error: 'سجّل دخولك أولاً لحفظ الحجز في قاعدة البيانات.' };
     const { data: car, error: carErr } = await supabase
       .from('cars')
-      .select('dealer_id, status, dealers!inner(status)')
+      .select('organization_id, status, organizations!inner(status)')
       .eq('id', input.carId)
       .maybeSingle();
     if (carErr || !car) return { ok: false, error: 'السيارة غير متاحة للحجز الآن.' };
     const { error } = await supabase.from('bookings').insert({
       customer_id: user.id,
-      dealer_id: (car as Record<string, any>).dealer_id,
+      organization_id: (car as Record<string, any>).organization_id,
       car_id: input.carId,
       origin_city: input.originCity,
       destination_city: input.destination,

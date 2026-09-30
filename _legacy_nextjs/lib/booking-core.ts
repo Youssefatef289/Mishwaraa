@@ -42,17 +42,17 @@ export async function createBookingFor(s: SupabaseClient, user: User, data: Book
   validateBookingData(data.destination.trim(), data.days, data.startDate);
   const { data: car, error } = await s
     .from('cars')
-    .select('id,dealer_id,price_per_day,extra_per_km,dealers!inner(city,status,user_id)')
+    .select('id,organization_id,price_per_day,extra_per_km,organizations!inner(city,status,owner_id)')
     .eq('id', data.carId)
     .eq('status', 'available')
     .single();
-  const dealer = car?.dealers as unknown as { city: string; status: string; user_id: string } | undefined;
+  const dealer = car?.organizations as unknown as { city: string; status: string; owner_id: string } | undefined;
   if (error || !car || !dealer || dealer.status !== 'approved') throw new Error('This car is no longer available.');
   const quote = await calculateQuote(dealer.city, data.destination.trim(), data.days, Number(car.price_per_day), Number(car.extra_per_km));
   // نفس قيم الإدراج الموجودة في createBooking — مع إعادة السجل المُنشأ (select) ليُرجعه الـ API.
   const { data: created, error: insertError } = await s.from('bookings').insert({
     customer_id: user.id,
-    dealer_id: car.dealer_id,
+    organization_id: car.organization_id,
     car_id: car.id,
     origin_city: dealer.city,
     destination_city: data.destination.trim(),
@@ -65,7 +65,7 @@ export async function createBookingFor(s: SupabaseClient, user: User, data: Book
     terms_accepted_at: new Date().toISOString(),
   }).select('*').single();
   if (insertError) throw new Error(insertError.message);
-  await notify(await emailFor(dealer.user_id), 'New Mishwar booking request', `A customer requested a car trip to ${data.destination.trim()}.`);
+  await notify(await emailFor(dealer.owner_id), 'New Mishwar booking request', `A customer requested a car trip to ${data.destination.trim()}.`);
   return created as Record<string, unknown>;
 }
 

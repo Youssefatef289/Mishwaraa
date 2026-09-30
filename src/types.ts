@@ -72,3 +72,10 @@ export interface RouteOption {
   distanceKm: number;
   roadName: string;
 }
+
+export interface Profile {
+  id: string;
+  role: \'customer\' | \'dealer\' | \'super_admin\';
+  full_name?: string;
+  phone?: string;
+}
