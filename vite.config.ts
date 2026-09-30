@@ -8,18 +8,18 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "."),
+        "@": path.resolve(import.meta.dirname, "."),
       },
     },
     build: {
       rollupOptions: {
         input: {
-          main: path.resolve(__dirname, "index.html"),
-          browse: path.resolve(__dirname, "browse.html"),
-          booking: path.resolve(__dirname, "booking.html"),
-          dashboard: path.resolve(__dirname, "dashboard.html"),
-          admin: path.resolve(__dirname, "admin.html"),
-          myBookings: path.resolve(__dirname, "my-bookings.html"),
+          main: path.resolve(import.meta.dirname, "index.html"),
+          browse: path.resolve(import.meta.dirname, "browse.html"),
+          booking: path.resolve(import.meta.dirname, "booking.html"),
+          dashboard: path.resolve(import.meta.dirname, "dashboard.html"),
+          admin: path.resolve(import.meta.dirname, "admin.html"),
+          myBookings: path.resolve(import.meta.dirname, "my-bookings.html"),
         },
       },
     },
