@@ -70,23 +70,23 @@ export async function loadLiveCars(): Promise<Car[] | null> {
 }
 
 /** بيانات لوحة المعارض للمستخدم الحالي (معرض) */
-export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerRequest[] } | null> {
+export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerRequest[], status: string, id: string } | null> {
   if (!supabase) return null;
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     const { data: dealer } = await supabase
-      .from('organizations')
+      .from('dealers')
       .select('*')
-      .eq('owner_id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle();
     if (!dealer) return null;
     const [{ data: rows, error: carsErr }, { data: pending, error: reqErr }] = await Promise.all([
-      supabase.from('cars').select('*, organizations!inner(name, city, status)').eq('organization_id', (dealer as Record<string, any>).id),
+      supabase.from('cars').select('*, dealers!inner(name, city, status)').eq('dealer_id', (dealer as Record<string, any>).id),
       supabase
         .from('bookings')
         .select('*, cars(name)')
-        .eq('organization_id', (dealer as Record<string, any>).id)
+        .eq('dealer_id', (dealer as Record<string, any>).id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(20),
@@ -110,7 +110,7 @@ export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerR
         pickupTime: 'التسليم حسب العقد',
       };
     });
-    return { fleet, requests };
+    return { fleet, requests, status: (dealer as Record<string, any>).status, id: (dealer as Record<string, any>).id };
   } catch {
     return null;
   }
