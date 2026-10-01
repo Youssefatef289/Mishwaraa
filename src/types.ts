@@ -75,7 +75,7 @@ export interface RouteOption {
 
 export interface Profile {
   id: string;
-  role: 'customer' | 'dealer' | 'super_admin';
+  role: \'customer\' | \'dealer\' | \'super_admin\';
   full_name?: string;
   phone?: string;
 }

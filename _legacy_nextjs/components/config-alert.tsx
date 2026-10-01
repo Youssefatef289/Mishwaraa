@@ -1,1 +1,0 @@
-export default function ConfigAlert(){return <section className="surface p-6" style={{borderColor:'var(--amber)'}}><h1 className="text-2xl font-bold" style={{color:'var(--amber)'}}>يلزم إعداد Supabase</h1><p className="mt-2 text-dim">انسخ <code>.env.example</code> إلى <code>.env.local</code> وأضف رابط المشروع ومفتاحه العام، ثم أعد تشغيل الخادم.</p></section>}

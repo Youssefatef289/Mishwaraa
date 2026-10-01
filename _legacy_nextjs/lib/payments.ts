@@ -1,1 +1,0 @@
-export async function startPaymobPayment(){if(process.env.PAYMOB_ENABLED!=='true')return {enabled:false as const}; /* Paymob adapter belongs here when keys are configured. */ return {enabled:true as const,url:null}}
