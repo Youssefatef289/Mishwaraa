@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/src/lib/supabase';
-import { SupportChat } from '@/src/shared/';
+import { SupportChat } from '@/src/shared/SupportChat';
 
 interface AdminScreenProps {
   currentUserId: string | null;
