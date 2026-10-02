@@ -1,47 +1,55 @@
 # Mishwar - مشوار
 
-Mishwar is a Next-Generation Car Rental Marketplace targeting the Egyptian market, built with React 19, Vite 8, Tailwind v4, and Supabase.
+مشوار هي منصة سحابية لتأجير السيارات في مصر، تهدف لربط العملاء بالمعارض الموثوقة لتأجير السيارات بسهولة وسرعة من خلال واجهة مستخدم سريعة، تفاعلية، وتدعم المحادثات الفورية.
+*Mishwar is a cloud-based car rental marketplace in Egypt, connecting customers with verified car rental dealers via a fast, interactive SPA with real-time chat.*
 
-## Tech Stack
-- **Frontend**: React 19 (SPA) powered by Vite 8
-- **Styling**: Tailwind CSS v4
-- **Backend & Database**: Supabase (PostgreSQL, Realtime, Auth, Row Level Security)
+## التقنيات المستخدمة (Tech Stack)
+- **React**: ^19.0.1
+- **Vite**: ^8.3.0
+- **Tailwind CSS**: ^4.3.3
+- **Supabase**: ^2.57.4 (`@supabase/supabase-js`)
 - **Deployment**: Vercel
 
-## Project Structure
-The project uses a domain-driven feature-based architecture:
-- `src/core/`: Application entry points (`main.tsx`, `App.tsx`), global styles (`index.css`), and global types (`types.ts`).
-- `src/shared/`: Shared UI components used across multiple domains (e.g., `Header`, `Footer`, `MobileBottomNav`, `EgyptianPlateBadge`, `HighwayDivider`).
-- `src/features/`: Domain-specific components, organized by feature area:
-  - `auth/`: Authentication UI (`AuthModal`).
-  - `home/`: The main discovery screen (`HomeScreen`).
-  - `booking/`: Checkout, Confirmation, My Bookings, and Booking Chat interfaces.
-  - `dealer/`: Dealer Operations Dashboard, Fleet management, and Settlements.
-  - `admin/`: Super Admin interfaces and Support Chat.
-- `src/lib/`: Backend integration, API clients, and Realtime websocket hooks (`supabase.ts`, `integration.ts`, `chat.ts`).
-- `src/data/`: Mock data for fallback or UI prototyping.
+## هيكل المجلدات (Folder Structure)
+تم تقسيم مجلد `src` بناءً على خصائص ووظائف المشروع (Domain-Based Structure):
+- `src/core/`: يحتوي على ملفات التهيئة الأساسية، التوجيهات العامة، وتنسيقات CSS الأساسية.
+- `src/shared/`: المكونات المشتركة التي يتم استخدامها في أكثر من مكان (כمثل Header و Footer والـ Chat).
+- `src/features/auth/`: مكونات تسجيل الدخول والتحقق من المستخدم.
+- `src/features/home/`: واجهة الاستكشاف الرئيسية للعملاء.
+- `src/features/booking/`: مسار الحجوزات وإدارتها للعميل.
+- `src/features/dealer/`: لوحة تحكم المعرض (إدارة الأسطول، الحجوزات، والتسويات).
+- `src/features/admin/`: لوحة التحكم الخاصة بالإدارة العُليا (Super Admin).
+- `src/lib/`: دوال الاتصال بالخادم وقاعدة البيانات (Supabase, Integration, Chat).
+- `src/data/`: البيانات الوهمية (Mock Data) للاستخدام أثناء التطوير أو انقطاع الاتصال.
 
-## Getting Started
-
-1. **Install Dependencies**:
+## خطوات التشغيل (Setup Steps)
+1. قم بتثبيت الحزم:
    ```bash
    npm install
    ```
-2. **Environment Variables**:
-   Create a `.env` file referencing your Supabase project:
+2. قم بنسخ ملف المتغيرات البيئية:
+   ```bash
+   cp .env.example .env.local
    ```
+3. أضف قيم المتغيرات الخاصة بـ Supabase داخل `.env.local`:
+   ```env
    VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
    ```
-3. **Start Development Server**:
+4. قم بتشغيل خادم التطوير:
    ```bash
    npm run dev
    ```
-4. **Production Build**:
-   ```bash
-   npm run build
-   ```
 
-## Development Workflow
-- Always refer to `docs/project-docs.md` before making architectural changes.
-- Ensure all new components are placed within their respective domain folders in `src/features/` or within `src/shared/` if used globally.
+## الأدوار والصلاحيات (Roles)
+يعتمد التطبيق على ثلاث فئات للمستخدمين: `customer`, `dealer`, و `super_admin`.
+- يتم استرداد نوع المستخدم من جدول `profiles` عند الدخول وتُخزّن القيمة في `App.tsx` داخل حالة (state) تُسمى `profile`.
+- تقوم `App.tsx` بمنع المستخدم العادي من الدخول إلى لوحة تحكم المعرض (`currentScreen === 'dealer'`) وتوجيهه تلقائياً إلى الصفحة الرئيسية.
+- نفس الأمر ينطبق على لوحة الإدارة (`admin`). 
+
+## سجل التحديثات
+### 2026-10-02 — إعادة هيكلة الملفات وتنظيف المشروع
+- إزالة النسخ القديمة والملفات الثابتة (Static HTML) التي لم تعد مستخدمة.
+- تقسيم مجلد `src/` إلى هيكل يعتمد على الخصائص (Domain-based: core, shared, features, lib, data).
+- تحديث جميع الاستدعاءات (Imports) وإعدادات Vite لتعكس الهيكل الجديد بشكل صحيح.
+- إضافة ملف `README.md` جديد ووثيقة المعايير `docs/PROJECT.md` لضمان استمرارية التنظيم.

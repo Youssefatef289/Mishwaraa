@@ -1,152 +1,56 @@
-# مشوار (Mishwar) — Project Reference
+# Mishwar - دليل هيكل وبيئة المشروع (Project Documentation)
 
-> ملف مرجعي واحد لأي مطوّر جديد يبدأ مع المشروع. اقرأه كاملًا الأول، وبعدين ابدأ من «تشغيل المشروع».
+## 1. نظرة عامة
+مشوار هي منصة لتأجير السيارات تخدم نوعين أساسيين من المستخدمين: **العميل (Customer)** الذي يبحث عن السيارات ويقوم بحجزها، و **المعرض (Dealer)** الذي يقوم بعرض سياراته وإدارة حجوزاته. بالإضافة إلى ذلك، توجد إدارة عُليا للمنصة **(Super Admin)** لمراقبة العمليات وتقديم الدعم الفني للمعارض. يعتمد التطبيق بالكامل على الواجهة الأمامية كـ Single-Page Application للتواصل المباشر مع Supabase.
 
----
+## 2. البنية (Architecture & Folder Structure)
+- `src/core/`: يحتوي على ملفات التهيئة (Bootstrapping)، نقطة الدخول، ونظام التوجيه (Routing).
+- `src/shared/`: المكونات المشتركة بين عدة أقسام لتجنب التكرار.
+- `src/features/auth/`: واجهة تسجيل الدخول والتحقق.
+- `src/features/home/`: واجهة الاستكشاف للمستخدمين.
+- `src/features/booking/`: مسار حجز السيارات والدردشة مع المعرض.
+- `src/features/dealer/`: لوحة تحكم المعرض لإدارة أسطوله وطلبات الحجز.
+- `src/features/admin/`: لوحة تحكم الإدارة العُليا والدعم الفني للمعارض.
+- `src/lib/`: الاتصال بالخادم، وقاعدة البيانات، والاستماع الفوري للمحادثات (Realtime).
+- `src/data/`: البيانات الوهمية والمساعدة للمشروع.
 
-## 1. Tech stack
+**تدفق البيانات (Data Flow):** 
+لا نستخدم مكتبات Routing مبنية على الروابط (URLs). بدلاً من ذلك، يتحكم ملف `App.tsx` في حالة التطبيق (State-based Router) من خلال المتغير `currentScreen`. يتم استدعاء البيانات حصرياً من `src/lib/integration.ts` أو `chat.ts` والتي تقوم بدورها بالتخاطب مباشرةً مع `Supabase`.
 
-| طبقة | التقنية |
-|---|---|
-| Framework | Next.js 14 (App Router) — React 18 |
-| اللغة | TypeScript (strict) |
-| قاعدة البيانات | PostgreSQL عبر Supabase (مضيفة أو محلية) |
-| Auth | Supabase Auth (email/password + JWT) |
-| ORM/Client | `@supabase/supabase-js` + `@supabase/ssr` (كوكيز للصفحات) |
-| Realtime | Supabase Realtime (`postgres_changes`) |
-| الأمان | RLS-first — كل قراءة/كتابة تِمر على سياسات RLS |
-| الإيميلات | Resend (اختياري) |
-| التحقق من المدخلات | zod (اختياري — طبقة REST API) |
-| الـ UI | Tailwind CSS 3 + الواجهة عربي RTL (خط Tajawal) |
+## 3. قاعدة البيانات
+المنصة تعتمد على الجداول التالية المربوطة جميعاً بقواعد Row Level Security (RLS):
+- `profiles`: يحتوي على `role` لتحديد ما إذا كان المستخدم (customer, dealer, super_admin). *ملاحظة: يتم إنشاؤه تلقائياً عند التسجيل من خلال Database Trigger يُدعى `handle_new_user`.*
+- `dealers`: بيانات المعارض. يتم إنشاؤه تلقائياً بواسطة نفس الـ Trigger للمستخدمين الجدد من نوع dealer (ويكون `status: 'pending'` حتى يتم قبوله).
+- `cars`: سيارات المعرض. الـ RLS يسمح للجميع بالرؤية، ولصاحب المعرض (`user_id` الخاص به) بالتعديل.
+- `bookings`: بيانات الحجز بين `user_id` (العميل) و `dealer_id`. الـ RLS يسمح للعميل ولصاحب المعرض برؤيتها وتعديلها.
+- `booking_messages`: جدول الدردشة الفورية الخاصة بالحجوزات.
+- `dealer_admin_messages`: جدول الدردشة لتقديم الدعم بين المعارض والإدارة.
 
-مجلد التطبيق: `_legacy_nextjs/` داخل مستودع ساياارا (النسخة Next.js). ملفات الهجرة في `supabase/migrations/` على مستوى المستودع.
+*ممنوع إنشاء Migrations جديدة لأي ميزات متواجدة بالفعل هنا، يجب الاعتماد على ما هو موجود.*
 
----
+## 4. الأدوار والصلاحيات
+- **على مستوى الواجهة (Frontend):** يتم جلب الصلاحيات في `App.tsx` عند بدء التطبيق (`getCurrentUser`). إذا كان دور المستخدم (`profile.role`) لا يسمح له بالدخول لصفحة معينة (كلوحة تحكم المعرض أو الإدارة)، تقوم الواجهة بتوجيهه مباشرة للصفحة الرئيسية. بالنسبة للمعارض الجديدة، إذا كانت حالتهم في جدول `dealers` ليست `approved`، تظهر لهم واجهة قيد المراجعة ولا يتم عرض لوحة التحكم الكاملة.
+- **على مستوى قاعدة البيانات (Backend/RLS):** كطبقة أمان ثانية، يمنع Supabase RLS أي مستخدم من جلب بيانات لا تخصه (مثل سيارات لا يملكها للتعديل، أو حجوزات لم يعقدها)، مما يضمن ألا يتسبب أي تلاعب بالواجهة في تسريب أو تعديل بيانات غير مصرح بها.
 
-## 2. Folder structure (الأهم)
+## 5. متغيرات البيئة
+تتواجد هذه المتغيرات في ملف `.env.example`:
+- `VITE_SUPABASE_URL`: رابط مشروع Supabase (المسؤول عن توجيه `supabase-js`).
+- `VITE_SUPABASE_PUBLISHABLE_KEY`: المفتاح العام (Anon Key) الذي يسمح للواجهة الأمامية بالتخاطب مع Supabase (محدود الصلاحيات بواسطة الـ RLS).
 
-```
-_legacy_nextjs/
-  app/
-    actions.ts            # Server Actions (الواجهة القديمة للصفحات) — Logic موجود في lib/booking-core
-    api/                  # طبقة REST API الجديدة (Route Handlers)
-      _helpers.ts         # مساعدات مشتركة: أخطاء موحّدة + كلاينت RLS من Bearer token
-      health/route.ts     # GET  /api/health
-      cars/route.ts       # GET  /api/cars
-      quote/route.ts      # POST /api/quote
-      bookings/route.ts   # POST /api/bookings
-      bookings/[id]/route.ts         # GET  /api/bookings/:id
-      bookings/[id]/respond/route.ts # POST /api/bookings/:id/respond
-    bookings/             # صفحة حجوزاتي (عميل)
-    dashboard/            # لوحة المعرض
-    admin/                # لوحة إدارة الموقع (super_admin)
-    cars/                 # تصفح السيارات + الحجز
-  components/             # مكوّنات الواجهة (dealer-dashboard, my-bookings, booking-chat, …)
-  lib/
-    booking-core.ts       # ⭐ قلب منطق الحجز والسعر (مشترك: Server Actions + REST API)
-    supabase/             # server.ts (كوكيز) + client.ts (متصفح) + middleware.ts
-    notifications.ts      # Resend
-  middleware.ts           # تجديد الجلسة + توجيه الأدوار
-supabase/
-  migrations/             # كل الهجرات (schemas, RLS, chat, …)
-postman/
-  mishwar.postman_collection.json   # كولكشن Postman لكل الـ API
-  mishwar.postman_environment.json  # متغيرات (baseUrl, customerToken, …)
-docs/
-  api-testing-report.md   # نتائج فحص الـ API
-  PROJECT.md              # هذا الملف
-```
+## 6. قواعد التسمية والتنظيم
+- يجب أن يكون اسم المكون (Component) واسم الملف المرفق له متطابقين بصيغة `PascalCase.tsx`.
+- ملفات الـ Logic والخدمات في `lib/` و `data/` يجب أن تكون `camelCase.ts`.
+- كل ملف يجب أن يحتوي على مكون واحد فقط يمثل الـ Default/Named Export للملف.
+- لا يجوز لأي قسم في `features` استيراد ملفات من قسم آخر مباشرةً. إذا كانا يحتاجان لملف مشترك، يجب وضعه في `shared/` أو `lib/`.
 
----
+## 7. قبل ما تعدّل (Pre-edit Checklist)
+لأي مُطوّر أو ذكاء اصطناعي (AI) ينوي تعديل الكود، يجب اتباع التالي:
+1. اقرأ هذا الملف `docs/PROJECT.md` بالكامل لتفهم المعايير.
+2. راجع سجل التحديثات في `README.md` لتعرف آخر التعديلات المنفذة.
+3. تأكد من عمل التطبيق بالكامل وتشغيل أمر البناء `npm run build` قبل بدء التعديلات.
+4. بمجرد انتهاء التعديلات، قم بعمل `npm run build` مرة أخرى للتأكد من عدم كسر أي كود.
+5. أضف وصفاً للتعديلات التي قمت بها في قسم "سجل التحديثات" بملف `README.md` ضمن نفس الـ Commit.
+6. لا تقم أبداً بتكرار حلول تمت معالجتها (مثل استدعاءات HTML قديمة أو مكونات زائدة) لتفادي الفوضى وتكدس الملفات.
 
-## 3. Auth & roles
-
-- الجداول: `profiles.role` (enum `super_admin | dealer | customer`)، `dealers.user_id` يربط المستخدم بمعرّف المعرض.
-- ربط الحساب بالدور يتم آليًا عبر `handle_new_user()` trigger وقت إنشاء المستخدم (من `user_metadata.role`).
-- أدوار RLS في كامل الموقع:
-  - **customer**: يقرأ/يعدّل حجوزاته فقط.
-  - **dealer**: يدير سياراته وحجوزات معرضه، ويشوف شات الحجز والدعم.
-  - **super_admin**: يقرأ كل شيء (`public.is_admin()`).
-  - **anon**: يقرأ المعارض المعتمدة وعربياتها المتاحة فقط.
-- صفحات محمية عبر `middleware.ts` (cookies) وكل أكشن يتحقق بـ `currentUser()`.
-
-### Auth في طبقة REST API
-- الطلبات العامة: بدون توكن → دور `anon` (RLS للأشياء العامة).
-- الطلبات الخاصة: `Authorization: Bearer <access_token>` → يصنع السيرفر كلاينت supabase-js بخيار `accessToken` فيتحمل كل طلب التوكن، والنواة السابقة تِمر على RLS بنفس هوية صاحب التوكن (أبدًا service role في مسارات الـ API).
-- الحصول على التوكن محليًا: سجّل دخول من `/auth` وانسخ access token من Session، أو من سكريبت:
-  ```ts
-  const { data } = await s.auth.signInWithPassword({ email, password });
-  const token = data.session?.access_token;
-  ```
-
----
-
-## 4. Booking lifecycle — مساران متطابقان
-
-المنطق الكامل في **`lib/booking-core.ts`** (مصدر واحد، ممنوع التكرار):
-
-1. `validateBookingData` → التحقق من الوجهة/الأيام/التاريخ.
-2. `fetchDistanceKm` → Google Distance Matrix (يتطلب `GOOGLE_MAPS_API_KEY`).
-3. `priceQuote` → `totalPrice = days*price_per_day + distance_km*extra_per_km`.
-4. `createBookingFor(client, user, data)` → يتحقق من توفّر العربية + اعتماد المعرض، يحسب الاقتباس، يُدرج الحجز (`status='pending'`)، ويرسل إيميل للمعرض.
-
-| المسار | النداء | التفاصيل |
-|---|---|---|
-| الواجهة (UI) | Server Action `createBooking` في `app/actions.ts` | جلسة الكوكيز + `revalidatePath` |
-| REST API | `POST /api/bookings` | Bearer token → `createBookingFor` → `201` بالحجز المنشأ |
-
-**الرد على الحجز**: `respond_to_booking(id, 'confirmed'|'rejected')` (RPC with `security definer`):
-- يتحقق داخليًا أن المستدعي هو مالك المعرض أو `is_admin()`.
-- غيّر `bookings.status` و (عند التأكيد) `cars.status → 'rented'` **في نفس المعاملة** (atomic).
-- الواجهة: `respondBooking` — الـ API: `POST /api/bookings/:id/respond`.
-
----
-
-## 5. Environment variables
-
-انسخ `_legacy_nextjs/.env.local.example` إلى `_legacy_nextjs/.env.local` واملأ القيم:
-
-| المتغير | ليه؟ | مطلوب؟ |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | رابط مشروع Supabase | مطلوب |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | مفتاح العميل (pub/anón) — RLS | مطلوب |
-| `SUPABASE_SERVICE_ROLE_KEY` | من السيرفر فقط (بريد `emailFor`) — **لا** يُستخدم في مسارات API | للتحقق/الإيميل فقط |
-| `GOOGLE_MAPS_API_KEY` | حساب المسافات للاقتباس | للحجز/الاقتباس |
-| `RESEND_API_KEY` + `NOTIFICATION_FROM` | إيميلات الإشعارات | اختياري |
-| `PAYMOB_ENABLED` / `TWILIO_ENABLED` | مدفوعات/SMS (غير مفعّلين) | اختياري |
-
----
-
-## 6. تشغيل المشروع
-
-1. `cd _legacy_nextjs`
-2. `npm install`
-3. املأ `.env.local` (أعلاه).
-4. طبّق الهجرات على قاعدة إنتاج/محلية: مشروعك يحتاج جداول `profiles, dealers, cars, bookings` + `booking_messages, dealer_admin_messages`.
-5. `npm run dev` → `http://localhost:3000`
-6. `npm run build` للتأكد قبل الدفع.
-
----
-
-## 7. تشغيل كولكشن Postman من جديد
-
-1. افتح **Postman extension** في VS Code.
-2. Import: `postman/mishwar.postman_collection.json` + `postman/mishwar.postman_environment.json`.
-3. فعّل بيئة **Mishwar Local** واملأ:
-   - `customerToken` / `dealerToken`: من `/auth` (انظر §3).
-   - `carId`: من `GET /api/cars`.
-   - `bookingId`: من استجابة `POST /api/bookings` (أو أي حجز في الجدول).
-   - `baseUrl`: `http://localhost:3000` (غيّرها لو المنفذ مختلف).
-4. شغّل الفولدرات بالترتيب: Health → Cars → Quote → Bookings. الطلبات المسماة «فشل متوقع» لازم ترجّع الأكواد المكتوبة.
-
-> من الطرفية بديل عن الـ extension: `curl.exe -s -i http://localhost:3000/api/health` وهكذا لكل مسار.
-
----
-
-## 8. معايير مهمة
-
-- **RLS الأول**: لا تفتح وصول بدون سياسة؛ لا تستخدم service role في مسارات API.
-- **لا تكرار منطق**: أي تعديل على حساب/تحقق يبدأ من `lib/booking-core.ts`.
-- أخطاء API موحّدة: `{ "error": { "code", "message" } }`.
-- الرسائل الإنجليزية في طبقة API (تقنية)، والواجهة عربي بالكامل.
-- `docs/api-testing-report.md` يوثّق كل مسار + النتائج الفعلية لكل اختبار.
+## معروف ومؤجل
+- التعديلات التي تم اقتراحها في الـ Session السابقة (مثل إضافة `AdminScreen` بالكامل لـ `App.tsx`) قد تحتاج لمراجعة ربطها الفعلي داخل التطبيق، حالياً يتم الالتزام بالبنية فقط.
