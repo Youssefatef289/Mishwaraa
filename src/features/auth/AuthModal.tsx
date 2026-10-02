@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { signInUser, signUpUser } from '../lib/supabase';
+import { signInUser, signUpUser } from '@/src/lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;

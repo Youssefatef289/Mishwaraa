@@ -1,7 +1,7 @@
 // طبقة البيانات — تحويل صفوف Supabase إلى أنواع شاشات مشوار
 // كل الدوال تعود بـ null في حالة عدم التهيئة/الفشل حتي تبقى البيانات التجريبية هي الأساس.
-import type { Booking, Car, DealerRequest } from '../types';
-import { supabase } from './supabase';
+import type { Booking, Car, DealerRequest } from '@/src/core/types';
+import { supabase } from '@/src/lib/supabase';
 
 const FALLBACK_IMG =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuA9PA3q6QcYuprjKbhshCO96zoVnaYZzJXoMBjJ8WweRYq4ao15O71qNEy-vThgwKxkzdnZuETqZakR8zBMv0mN3IGbXy6Ehpvor50IoITrGfUJbvN7YajOR3lWdbaeIksbTOBaorYOCu0HMKKFc4ZDTaV9k4_-cDfkzHtMP1Wa3A7NSWwA4BLaK9IbvoM2foUHi517JO2Yz1seyeVTfj9hY1ec5wRzmiMJYCtSs-wsH8_rm933sYtr';
@@ -70,23 +70,23 @@ export async function loadLiveCars(): Promise<Car[] | null> {
 }
 
 /** بيانات لوحة المعارض للمستخدم الحالي (معرض) */
-export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerRequest[], status: string, id: string } | null> {
+export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerRequest[] } | null> {
   if (!supabase) return null;
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     const { data: dealer } = await supabase
-      .from('dealers')
+      .from('organizations')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('owner_id', user.id)
       .maybeSingle();
     if (!dealer) return null;
     const [{ data: rows, error: carsErr }, { data: pending, error: reqErr }] = await Promise.all([
-      supabase.from('cars').select('*, dealers!inner(name, city, status)').eq('dealer_id', (dealer as Record<string, any>).id),
+      supabase.from('cars').select('*, organizations!inner(name, city, status)').eq('organization_id', (dealer as Record<string, any>).id),
       supabase
         .from('bookings')
         .select('*, cars(name)')
-        .eq('dealer_id', (dealer as Record<string, any>).id)
+        .eq('organization_id', (dealer as Record<string, any>).id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(20),
@@ -110,7 +110,7 @@ export async function loadDealerOps(): Promise<{ fleet: Car[]; requests: DealerR
         pickupTime: 'التسليم حسب العقد',
       };
     });
-    return { fleet, requests, status: (dealer as Record<string, any>).status, id: (dealer as Record<string, any>).id };
+    return { fleet, requests };
   } catch {
     return null;
   }

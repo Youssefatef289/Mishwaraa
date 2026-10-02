@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Car, Booking } from '../types';
-import { ROUTE_OPTIONS } from '../data/mockData';
-import { EgyptianPlateBadge } from './EgyptianPlateBadge';
-import { HighwayDivider } from './HighwayDivider';
+import { Car, Booking } from '@/src/core/types';
+import { ROUTE_OPTIONS } from '@/src/data/mockData';
+import { EgyptianPlateBadge } from '@/src/shared/EgyptianPlateBadge';
+import { HighwayDivider } from '@/src/shared/HighwayDivider';
 
 interface CheckoutScreenProps {
   selectedCar: Car;

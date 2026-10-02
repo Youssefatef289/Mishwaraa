@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car } from '../types';
+import { Car } from '@/src/core/types';
 
 interface AddCarModalProps {
   isOpen: boolean;

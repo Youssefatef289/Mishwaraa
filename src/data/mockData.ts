@@ -1,4 +1,4 @@
-import { Car, Booking, DealerRequest, RouteOption } from '../types';
+import { Car, Booking, DealerRequest, RouteOption } from '@/src/core/types';
 
 export const ROUTE_OPTIONS: RouteOption[] = [
   {

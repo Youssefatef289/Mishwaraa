@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Booking } from "../types";
-import { INITIAL_COMPLETED_BOOKINGS } from "../data/mockData";
-import { EgyptianPlateBadge } from "./EgyptianPlateBadge";
-import { HighwayDivider } from "./HighwayDivider";
+import { Booking } from '@/src/core/types';
+import { INITIAL_COMPLETED_BOOKINGS } from '@/src/data/mockData';
+import { EgyptianPlateBadge } from '@/src/shared/EgyptianPlateBadge';
+import { HighwayDivider } from '@/src/shared/HighwayDivider';
 
 interface MyBookingsScreenProps {
   activeBooking: Booking;

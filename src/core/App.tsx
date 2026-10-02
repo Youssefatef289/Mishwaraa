@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Car, Booking, DealerRequest } from './types';
-import { MOCK_CARS, INITIAL_ACTIVE_BOOKING } from './data/mockData';
-import { supabase, isSupabaseConfigured, getCurrentUser, signOutUser } from './lib/supabase';
-import { loadLiveCars, loadDealerOps, loadMyBookings, persistBooking, respondToBooking, setCarStatus } from './lib/integration';
-import { AuthModal } from './components/AuthModal';
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
-import { HomeScreen } from './components/HomeScreen';
-import { CheckoutScreen } from './components/CheckoutScreen';
-import { ConfirmationScreen } from './components/ConfirmationScreen';
-import { MyBookingsScreen } from './components/MyBookingsScreen';
-import { DealerDashboardScreen } from './components/DealerDashboardScreen';
-import { AddCarModal } from './components/AddCarModal';
-import { SettlementsModal } from './components/SettlementsModal';
-import { RegisterDealerModal } from './components/RegisterDealerModal';
-import { MobileBottomNav } from './components/MobileBottomNav';
+import { Car, Booking, DealerRequest } from '@/src/core/types';
+import { MOCK_CARS, INITIAL_ACTIVE_BOOKING } from '@/src/data/mockData';
+import { supabase, isSupabaseConfigured, getCurrentUser, signOutUser } from '@/src/lib/supabase';
+import { loadLiveCars, loadDealerOps, loadMyBookings, persistBooking, respondToBooking, setCarStatus } from '@/src/lib/integration';
+import { AuthModal } from '@/src/features/auth/AuthModal';
+import { Header } from '@/src/shared/Header';
+import { Footer } from '@/src/shared/Footer';
+import { HomeScreen } from '@/src/features/home/HomeScreen';
+import { CheckoutScreen } from '@/src/features/booking/CheckoutScreen';
+import { ConfirmationScreen } from '@/src/features/booking/ConfirmationScreen';
+import { MyBookingsScreen } from '@/src/features/booking/MyBookingsScreen';
+import { DealerDashboardScreen } from '@/src/features/dealer/DealerDashboardScreen';
+import { AddCarModal } from '@/src/features/dealer/AddCarModal';
+import { SettlementsModal } from '@/src/features/dealer/SettlementsModal';
+import { RegisterDealerModal } from '@/src/features/dealer/RegisterDealerModal';
+import { MobileBottomNav } from '@/src/shared/MobileBottomNav';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<

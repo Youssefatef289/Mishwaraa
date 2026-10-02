@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import type { ChatMessage } from '../lib/chat';
-import { loadBookingMessages, sendBookingMessage, subscribeBookingMessages } from '../lib/chat';
-import { ChatThread } from './ChatThread';
+import type { ChatMessage } from '@/src/lib/chat';
+import { loadBookingMessages, sendBookingMessage, subscribeBookingMessages } from '@/src/lib/chat';
+import { ChatThread } from '@/src/shared/ChatThread';
 
 interface BookingChatProps {
   bookingId: string;

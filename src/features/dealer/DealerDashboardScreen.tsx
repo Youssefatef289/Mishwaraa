@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Car, DealerRequest } from "../types";
-import { MOCK_CARS, INITIAL_DEALER_REQUESTS } from "../data/mockData";
-import { EgyptianPlateBadge } from "./EgyptianPlateBadge";
-import { HighwayDivider } from "./HighwayDivider";
+import { Car, DealerRequest } from '@/src/core/types';
+import { MOCK_CARS, INITIAL_DEALER_REQUESTS } from '@/src/data/mockData';
+import { EgyptianPlateBadge } from '@/src/shared/EgyptianPlateBadge';
+import { HighwayDivider } from '@/src/shared/HighwayDivider';
 
 interface DealerDashboardScreenProps {
   fleetOverride?: Car[];

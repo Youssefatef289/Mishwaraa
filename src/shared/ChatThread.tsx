@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { ChatMessage } from '../lib/chat';
+import type { ChatMessage } from '@/src/lib/chat';
 
 interface ChatThreadProps {
   /** رسائل المحادثة */

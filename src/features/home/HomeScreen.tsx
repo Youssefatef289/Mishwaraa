@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Car } from "../types";
-import { MOCK_CARS } from "../data/mockData";
-import { EgyptianPlateBadge } from "./EgyptianPlateBadge";
-import { HighwayDivider } from "./HighwayDivider";
+import { Car } from '@/src/core/types';
+import { MOCK_CARS } from '@/src/data/mockData';
+import { EgyptianPlateBadge } from '@/src/shared/EgyptianPlateBadge';
+import { HighwayDivider } from '@/src/shared/HighwayDivider';
 
 interface HomeScreenProps {
   carsOverride?: Car[];

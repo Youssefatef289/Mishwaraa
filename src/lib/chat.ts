@@ -1,7 +1,7 @@
 // طبقة المحادثات — مشوار
 // booking_messages: محادثة بين العميل والمعرض على حجز محدد
 // dealer_admin_messages: محادثة بين المعرض وإدارة مشوار
-import { supabase } from './supabase';
+import { supabase } from '@/src/lib/supabase';
 
 // ========== أنواع الرسائل ==========
 

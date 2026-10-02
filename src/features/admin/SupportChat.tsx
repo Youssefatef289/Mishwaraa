@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import type { ChatMessage } from '../lib/chat';
-import { loadSupportMessages, sendSupportMessage, subscribeSupportMessages } from '../lib/chat';
-import { ChatThread } from './ChatThread';
+import type { ChatMessage } from '@/src/lib/chat';
+import { loadSupportMessages, sendSupportMessage, subscribeSupportMessages } from '@/src/lib/chat';
+import { ChatThread } from '@/src/shared/ChatThread';
 
 interface SupportChatProps {
   dealerId: string;

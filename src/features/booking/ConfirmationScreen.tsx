@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Booking } from '../types';
-import { EgyptianPlateBadge } from './EgyptianPlateBadge';
-import { HighwayDivider } from './HighwayDivider';
+import { Booking } from '@/src/core/types';
+import { EgyptianPlateBadge } from '@/src/shared/EgyptianPlateBadge';
+import { HighwayDivider } from '@/src/shared/HighwayDivider';
 
 interface ConfirmationScreenProps {
   booking: Booking;
