@@ -15,7 +15,6 @@ import { DealerDashboardScreen } from '@/src/features/dealer/DealerDashboardScre
 import { RegisterDealerModal } from '@/src/features/dealer/RegisterDealerModal';
 import { MobileBottomNav, ScreenType } from '@/src/shared/MobileBottomNav';
 import { AdminScreen } from '@/src/features/admin/AdminScreen';
-import { OwnerDashboardScreen } from '@/src/features/owner/OwnerDashboardScreen';
 import { PublicDealerScreen } from '@/src/features/dealer/PublicDealerScreen';
 
 export default function App() {
@@ -87,8 +86,7 @@ export default function App() {
       const { profile: p } = await getCurrentUser();
       setProfile(p);
       if (p?.role === 'dealer') setCurrentScreen('dealer');
-      if (p?.role === 'car_owner') setCurrentScreen('owner');
-      if (p?.role === 'super_admin') setCurrentScreen('admin');
+            if (p?.role === 'super_admin') setCurrentScreen('admin');
     }
   };
 
@@ -122,9 +120,8 @@ export default function App() {
   };
 
   const isDesktopDealer = profile?.role === 'dealer' && currentScreen === 'dealer';
-  const isDesktopOwner = profile?.role === 'car_owner' && currentScreen === 'owner';
-  const isDesktopAdmin = profile?.role === 'super_admin' && currentScreen === 'admin';
-  const hideHeaderFooter = isDesktopDealer || isDesktopOwner || isDesktopAdmin;
+    const isDesktopAdmin = profile?.role === 'super_admin' && currentScreen === 'admin';
+  const hideHeaderFooter = isDesktopDealer || isDesktopAdmin;
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#f8f9ff] font-['Tajawal',sans-serif] pb-safe flex flex-col">
@@ -157,7 +154,7 @@ export default function App() {
         )}
 
         {currentScreen === 'home' && (
-          <HomeScreen
+          <HomeScreen onNavigateToDealer={(id) => { setSelectedDealerId(id); setCurrentScreen('dealer_profile'); }}
             carsOverride={liveCars ?? undefined}
             dbConnected={isSupabaseConfigured}
             onSelectCar={(car) => {
@@ -238,11 +235,7 @@ export default function App() {
         )}
 
         {(isMobileView || (typeof window !== 'undefined' && window.innerWidth < 768)) && !hideHeaderFooter && (
-          <MobileBottomNav
-            currentScreen={currentScreen}
-            onNavigate={(s) => setCurrentScreen(s)}
-            role={profile?.role || 'guest'}
-          />
+          <MobileBottomNav currentScreen={currentScreen} onNavigate={(s) => setCurrentScreen(s)} role={profile?.role || 'guest'} unreadCount={0} onOpenAddCar={() => setIsRegisterDealerOpen(true)} />
         )}
       </div>
 
@@ -258,3 +251,5 @@ export default function App() {
     </div>
   );
 }
+
+
