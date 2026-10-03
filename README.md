@@ -63,3 +63,6 @@ _Mishwar is a cloud-based car rental marketplace in Egypt, connecting customers 
 - إضافة ملف `README.md` جديد ووثيقة المعايير `docs/PROJECT.md` لضمان استمرارية التنظيم.
 
 - **Phase 2-5 Updates**: Removed debug header, implemented strict role-based routing (Option A for car_owners = dealer under the hood), completely redesigned the public HomeScreen with authentic data and spec-aligned typography/colors, and implemented a native-feeling elevated FAB MobileBottomNav.
+
+- **Bug Fix (Design Reversion):** Diagnosed the persistent design-revert bug. Root causes found: (1) A secondary AI tool or editor buffer overrode local files right before commits, wiping out recent changes. Documented single-source-of-truth policy in PROJECT.md. (2) ercel.json was 0 bytes, missing caching rules. Re-wrote ercel.json with strict 
+o-cache for index.html and aggressive caching for immutable hashed assets to fix stale deployments on Vercel.
