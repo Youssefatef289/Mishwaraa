@@ -240,3 +240,4 @@ export async function setCarStatus(carId: string, status: 'available' | 'mainten
     return { ok: false, error: e instanceof Error ? e.message : 'خطأ غير متوقع' };
   }
 }
+export async function loadApprovedDealers(): Promise<any[] | null> { const { data, error } = await supabase.from('dealers').select('*').eq('status', 'approved'); if (error || !data) return null; return data.map(d => ({ id: d.id, name: d.dealer_name, city: d.city, bio: d.bio || '???? ????? ???? ???? ????????', logo: d.logo_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=200&q=80', cover: d.cover_url || 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80' })); }

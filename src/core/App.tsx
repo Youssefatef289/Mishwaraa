@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Car, Booking, DealerRequest } from '@/src/core/types';
+import { Car, Booking, DealerRequest, Profile } from '@/src/core/types';
 import { MOCK_CARS, INITIAL_ACTIVE_BOOKING } from '@/src/data/mockData';
 import { supabase, isSupabaseConfigured, getCurrentUser, signOutUser } from '@/src/lib/supabase';
 import { loadLiveCars, loadDealerOps, loadMyBookings, persistBooking, respondToBooking, setCarStatus } from '@/src/lib/integration';
@@ -12,305 +12,241 @@ import { CheckoutScreen } from '@/src/features/booking/CheckoutScreen';
 import { ConfirmationScreen } from '@/src/features/booking/ConfirmationScreen';
 import { MyBookingsScreen } from '@/src/features/booking/MyBookingsScreen';
 import { DealerDashboardScreen } from '@/src/features/dealer/DealerDashboardScreen';
-import { AddCarModal } from '@/src/features/dealer/AddCarModal';
-import { SettlementsModal } from '@/src/features/dealer/SettlementsModal';
 import { RegisterDealerModal } from '@/src/features/dealer/RegisterDealerModal';
-import { MobileBottomNav } from '@/src/shared/MobileBottomNav';
+import { MobileBottomNav, ScreenType } from '@/src/shared/MobileBottomNav';
+import { AdminScreen } from '@/src/features/admin/AdminScreen';
+import { OwnerDashboardScreen } from '@/src/features/owner/OwnerDashboardScreen';
+import { PublicDealerScreen } from '@/src/features/dealer/PublicDealerScreen';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<
-    'home' | 'checkout' | 'confirmation' | 'bookings' | 'dealer'
-  >('home');
-  const [selectedCar, setSelectedCar] = useState<Car>(MOCK_CARS[0]);
-  const [activeBooking, setActiveBooking] = useState<Booking>(INITIAL_ACTIVE_BOOKING);
-  const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+  const [activeBooking, setActiveBooking] = useState<Booking | null>(null);
+  const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null);
 
-  // Modals state
-  const [isAddCarOpen, setIsAddCarOpen] = useState(false);
-  const [isSettlementsOpen, setIsSettlementsOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const [isRegisterDealerOpen, setIsRegisterDealerOpen] = useState(false);
-  const [globalToast, setGlobalToast] = useState<string | null>(null);
 
-  // ===== الربط المباشر مع قاعدة البيانات (Supabase) =====
-  const [liveCars, setLiveCars] = useState<Car[] | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [dealerOps, setDealerOps] = useState<{ fleet: Car[]; requests: DealerRequest[] } | null>(null);
-  const [liveBookings, setLiveBookings] = useState<Booking[] | null>(null);
+  // Auth State
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [authRole, setAuthRole] = useState<'customer' | 'dealer'>('customer');
+  const [authRole, setAuthRole] = useState<'customer' | 'dealer' | 'car_owner'>('customer');
 
-  // تحميل الجلسة والأسطول عند الإقلاع + الاستماع لتغيّر حالة المصادقة
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [liveCars, setLiveCars] = useState<Car[] | null>(null);
+  const [dealerOps, setDealerOps] = useState<{ fleet: Car[]; requests: DealerRequest[]; status?: string } | null>(null);
+  const [liveBookings, setLiveBookings] = useState<Booking[] | null>(null);
+  const [globalToast, setGlobalToast] = useState<string | null>(null);
+
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const u = await getCurrentUser();
-      if (cancelled) return;
-      setUser(u);
-      const cars = await loadLiveCars();
-      if (!cancelled && cars && cars.length) {
-        setLiveCars(cars);
-        setSelectedCar(cars[0]);
-      }
-      if (u) {
-        const ops = await loadDealerOps();
-        if (!cancelled && ops) setDealerOps(ops);
-        const bk = await loadMyBookings();
-        if (!cancelled && bk) setLiveBookings(bk);
-      }
-    })();
+    if (isSupabaseConfigured) {
+      getCurrentUser().then(async ({ user: u, profile: p }) => {
+        setUser(u);
+        setProfile(p);
+        if (u && p) {
+          if (p.role === 'dealer') {
+            setCurrentScreen('dealer');
+          } else if (p.role === 'super_admin') {
+            setCurrentScreen('admin');
+          } else if (p.role === 'car_owner') {
+            setCurrentScreen('owner');
+          }
+        }
+      });
+      loadLiveCars().then(setLiveCars);
+    } else if (isDemoMode) {
+      setLiveCars(MOCK_CARS);
+      setActiveBooking(INITIAL_ACTIVE_BOOKING);
+    }
+  }, [isDemoMode]);
 
-    const sub = supabase?.auth.onAuthStateChange((_event, session) => {
-      const nextUser = session?.user ?? null;
-      setUser(nextUser);
-      if (!nextUser) {
-        setDealerOps(null);
-        setLiveBookings(null);
-        return;
-      }
-      loadDealerOps().then((ops) => { if (ops) setDealerOps(ops); });
-      loadMyBookings().then((bk) => { if (bk) setLiveBookings(bk); });
-    });
-    return () => {
-      cancelled = true;
-      sub?.data.subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleAuthed = (u: User) => {
-    setUser(u);
-    loadDealerOps().then((ops) => { if (ops) setDealerOps(ops); });
-    loadMyBookings().then((bk) => { if (bk) setLiveBookings(bk); });
-    showToast('مرحباً بك في مشوار! تمت مزامنة حسابك.');
-  };
-
-  const handleSignOut = async () => {
-    await signOutUser();
-    setUser(null);
-    setDealerOps(null);
-    setLiveBookings(null);
-    showToast('تم تسجيل الخروج بنجاح.');
-  };
-
-  const handleRespondRequest = (id: string, status: 'confirmed' | 'declined') => {
-    respondToBooking(id, status === 'confirmed' ? 'confirmed' : 'rejected').then((res) => {
-      if (res.ok) showToast('تمت مزامنة رد المعرض مع قاعدة البيانات.');
-      else if (res.error !== 'request-id') showToast(res.error || 'تعذرت المزامنة — يعمل الوضع التجريبي.');
-    });
-  };
-
-  const handleToggleCar = (id: string, status: 'available' | 'maintenance') => {
-    setCarStatus(id, status).then((res) => {
-      if (!res.ok && res.error !== 'car-id' && res.error) showToast(res.error);
-    });
-  };
+  useEffect(() => {
+    if (user && profile?.role === 'dealer' && isSupabaseConfigured) {
+      loadDealerOps().then(setDealerOps);
+    }
+    if (user && profile?.role === 'customer' && isSupabaseConfigured) {
+      loadMyBookings().then(setLiveBookings);
+    }
+  }, [user, profile, currentScreen]);
 
   const showToast = (msg: string) => {
     setGlobalToast(msg);
     setTimeout(() => setGlobalToast(null), 3000);
   };
 
-  const handleSelectCarForCheckout = (car: Car) => {
-    setSelectedCar(car);
-    setCurrentScreen('checkout');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleBookingConfirmed = (newBooking: Booking) => {
-    setActiveBooking(newBooking);
-    setCurrentScreen('confirmation');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // حفظ الحجز في قاعدة البيانات عند توفرها وحساب مسجل
-    if (liveCars && user && newBooking.car) {
-      const dbCar = liveCars.find((c) => c.id === newBooking.car.id);
-      if (dbCar) {
-        persistBooking({
-          carId: dbCar.id,
-          originCity: dbCar.location.split('،')[0] || dbCar.location,
-          destination: newBooking.dropoffLocation,
-          distanceKm: newBooking.distanceKm,
-          days: newBooking.days,
-          startDate: new Date().toISOString().slice(0, 10),
-          pricePerDay: newBooking.dailyPrice,
-          totalPrice: newBooking.totalPrice,
-        }).then((res) => {
-          showToast(res.ok ? 'تم حفظ الحجز في قاعدة البيانات بنجاح.' : res.error || 'يعمل الوضع المحلي.');
-        });
-      }
-    } else if (isSupabaseConfigured && !user) {
-      showToast('سجّل دخولك من زر «حسابي» لحفظ الحجز في حسابك على مشوار.');
+  const handleAuthed = async (u: User) => {
+    setUser(u);
+    setShowAuthModal(false);
+    showToast('تم تسجيل الدخول بنجاح!');
+    
+    // Refresh profile to redirect
+    if (isSupabaseConfigured) {
+      const { profile: p } = await getCurrentUser();
+      setProfile(p);
+      if (p?.role === 'dealer') setCurrentScreen('dealer');
+      if (p?.role === 'car_owner') setCurrentScreen('owner');
+      if (p?.role === 'super_admin') setCurrentScreen('admin');
     }
   };
 
-  const handleAddCarToFleet = (newCar: Car) => {
-    MOCK_CARS.push(newCar);
-    showToast(`تمت إضافة ${newCar.name} لأسطول المعرض بنجاح!`);
+  const handleSignOut = async () => {
+    await signOutUser();
+    setUser(null);
+    setProfile(null);
+    setCurrentScreen('home');
+    showToast('تم تسجيل الخروج.');
   };
 
+  const handleConfirmBooking = async (b: Booking) => {
+    if (!user) {
+      setAuthMode('signin');
+      setAuthRole('customer');
+      setShowAuthModal(true);
+      return;
+    }
+    if (isSupabaseConfigured) {
+      const ok = await persistBooking(b);
+      if (ok) {
+        setActiveBooking(b);
+        setCurrentScreen('confirmation');
+      } else {
+        showToast('حدث خطأ أثناء الحجز، يرجى المحاولة مرة أخرى.');
+      }
+    } else {
+      setActiveBooking(b);
+      setCurrentScreen('confirmation');
+    }
+  };
+
+  const isDesktopDealer = profile?.role === 'dealer' && currentScreen === 'dealer';
+  const isDesktopOwner = profile?.role === 'car_owner' && currentScreen === 'owner';
+  const isDesktopAdmin = profile?.role === 'super_admin' && currentScreen === 'admin';
+  const hideHeaderFooter = isDesktopDealer || isDesktopOwner || isDesktopAdmin;
+
   return (
-    <div className="min-h-screen bg-[#f8f9ff] text-[#121c28] flex flex-col font-sans selection:bg-[#ffdcbf] selection:text-[#2d1600]">
-      {/* Global Toast */}
+    <div dir="rtl" className="min-h-screen bg-[#f8f9ff] font-['Tajawal',sans-serif] pb-safe flex flex-col">
       {globalToast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-[#121c28] text-white px-4 py-2.5 rounded-lg shadow-xl border border-[#3aa6a6] flex items-center gap-2 text-xs font-bold animate-bounce">
-          <span className="material-symbols-outlined text-[#3aa6a6] text-[18px]">verified</span>
-          <span>{globalToast}</span>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl animate-[slideDown_0.3s_ease-out] font-bold">
+          {globalToast}
         </div>
       )}
 
-      {/* Main Top Header (hidden when in Dealer Dashboard for full operations layout) */}
-      {currentScreen !== 'dealer' && (
+      {!hideHeaderFooter && (
         <Header
           currentScreen={currentScreen}
-          onNavigate={(screen) => {
-            setCurrentScreen(screen);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
+          onNavigate={(s) => setCurrentScreen(s)}
           isMobileView={isMobileView}
           onToggleMobileView={() => setIsMobileView(!isMobileView)}
           onOpenRegisterDealerModal={() => setIsRegisterDealerOpen(true)}
-          userName={isSupabaseConfigured ? (user?.email?.split('@')[0] ?? user?.email) : undefined}
-          onOpenAuth={() => { setAuthMode('signin'); setShowAuthModal(true); }}
+          userName={profile?.full_name || user?.email?.split('@')[0]}
+          onOpenAuth={() => {
+            setAuthMode('signin');
+            setAuthRole('customer');
+            setShowAuthModal(true);
+          }}
           onSignOut={handleSignOut}
         />
       )}
 
-      {/* Main Content Area: Responsive or Mobile Simulator Frame */}
-      <div
-        className={`flex-1 flex flex-col transition-all ${
-          isMobileView
-            ? 'max-w-[430px] mx-auto my-4 bg-white rounded-3xl shadow-2xl border-8 border-[#27313e] overflow-hidden min-h-[880px] pb-16 relative'
-            : 'w-full'
-        }`}
-      >
-        {/* Mobile Device Notch Simulation in Mobile View */}
-        {isMobileView && (
-          <div className="w-full bg-[#1e232b] text-white py-1 px-4 flex items-center justify-between text-[11px] font-mono-numeric select-none z-50">
-            <span>09:41</span>
-            <div className="w-20 h-4 bg-black rounded-full mx-auto" />
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">signal_cellular_4_bar</span>
-              <span className="material-symbols-outlined text-[14px]">wifi</span>
-              <span className="material-symbols-outlined text-[14px]">battery_full</span>
-            </div>
-          </div>
+      <div className={`flex-1 ${isMobileView ? 'max-w-[428px] mx-auto w-full bg-white shadow-2xl relative overflow-hidden' : ''}`}>
+        {currentScreen === 'admin' && profile?.role === 'super_admin' && (
+          <AdminScreen />
         )}
 
-        {/* Screen 1: Home / Discovery */}
         {currentScreen === 'home' && (
           <HomeScreen
             carsOverride={liveCars ?? undefined}
-            dbConnected={Boolean(liveCars)}
-            onSelectCar={handleSelectCarForCheckout}
-            onNavigateToDealer={() => {
-              setCurrentScreen('dealer');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+            dbConnected={isSupabaseConfigured}
+            onSelectCar={(car) => {
+              setSelectedCar(car);
+              setCurrentScreen('checkout');
             }}
-            onOpenRegisterDealerModal={() => setIsRegisterDealerOpen(true)}
+            onOpenBookingModal={(car) => {
+              setSelectedCar(car);
+              setCurrentScreen('checkout');
+            }}
           />
         )}
 
-        {/* Screen 2: Checkout / Trip Configuration */}
-        {currentScreen === 'checkout' && (
+        {currentScreen === 'checkout' && selectedCar && (
           <CheckoutScreen
-            selectedCar={selectedCar}
-            onConfirmBooking={handleBookingConfirmed}
-            onBackToHome={() => {
-              setCurrentScreen('home');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            car={selectedCar}
+            onBack={() => setCurrentScreen('home')}
+            onConfirm={handleConfirmBooking}
           />
         )}
 
-        {/* Screen 3: Confirmation & Digital Boarding Pass Ticket */}
-        {currentScreen === 'confirmation' && (
+        {currentScreen === 'confirmation' && activeBooking && (
           <ConfirmationScreen
             booking={activeBooking}
-            onNavigateToBookings={() => {
-              setCurrentScreen('bookings');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onNavigateToHome={() => {
-              setCurrentScreen('home');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onBackHome={() => setCurrentScreen('home')}
+            onViewBookings={() => setCurrentScreen('bookings')}
           />
         )}
 
-        {/* Screen 4: Customer Bookings Portal */}
         {currentScreen === 'bookings' && (
           <MyBookingsScreen
-            activeBooking={activeBooking}
-            liveBookings={liveBookings ?? undefined}
-            onNewBookingClick={() => {
-              setCurrentScreen('home');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onViewDigitalTicket={() => {
-              setCurrentScreen('confirmation');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            bookings={liveBookings ?? (isDemoMode ? [INITIAL_ACTIVE_BOOKING] : [])}
+            onBack={() => setCurrentScreen('home')}
           />
         )}
 
-        {/* Screen 5: Dealer Operations Dashboard */}
-        {currentScreen === 'dealer' && (
+        {currentScreen === 'dealer' && profile?.role === 'dealer' && (
           <DealerDashboardScreen
-            onBackToCustomer={() => {
-              setCurrentScreen('home');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onOpenAddCarModal={() => setIsAddCarOpen(true)}
-            onOpenSettlementsModal={() => setIsSettlementsOpen(true)}
+            onBackToCustomer={() => setCurrentScreen('home')}
+            onOpenAddCarModal={() => {}}
+            onOpenSettlementsModal={() => {}}
             fleetOverride={dealerOps?.fleet ?? undefined}
             requestsOverride={dealerOps?.requests ?? undefined}
-            onRespondRequest={handleRespondRequest}
-            onToggleCar={handleToggleCar}
+            onRespondRequest={async (id, status) => {
+              if (isSupabaseConfigured) {
+                await respondToBooking(id, status);
+                loadDealerOps().then(setDealerOps);
+              }
+            }}
+            onToggleCar={async (id, status) => {
+              if (isSupabaseConfigured) {
+                await setCarStatus(id, status);
+                loadDealerOps().then(setDealerOps);
+              }
+            }}
           />
         )}
 
-        {/* Mobile Bottom Navigation in Mobile Simulator View */}
-        {isMobileView && (
+        {currentScreen === 'owner' && profile?.role === 'car_owner' && (
+          <OwnerDashboardScreen
+            onBackToCustomer={() => setCurrentScreen('home')}
+            onOpenAddCarModal={() => {}}
+            fleetOverride={dealerOps?.fleet ?? undefined}
+            requestsOverride={dealerOps?.requests ?? undefined}
+            onRespondRequest={async (id, status) => {
+              if (isSupabaseConfigured) {
+                await respondToBooking(id, status);
+                loadDealerOps().then(setDealerOps);
+              }
+            }}
+            onToggleCar={async (id, status) => {
+              if (isSupabaseConfigured) {
+                await setCarStatus(id, status);
+                loadDealerOps().then(setDealerOps);
+              }
+            }}
+          />
+        )}
+
+        {(isMobileView || (typeof window !== 'undefined' && window.innerWidth < 768)) && !hideHeaderFooter && (
           <MobileBottomNav
             currentScreen={currentScreen}
-            onNavigate={(screen) => {
-              setCurrentScreen(screen);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onCallSupport={() => showToast('الخط الساخن المباشر لطوارئ الطرق السريعة: 19822')}
+            onNavigate={(s) => setCurrentScreen(s)}
+            role={profile?.role || 'guest'}
           />
         )}
       </div>
 
-      {/* Main Footer (shown in Desktop view for customer screens) */}
-      {currentScreen !== 'dealer' && !isMobileView && (
-        <Footer
-          onNavigate={(screen) => {
-            setCurrentScreen(screen);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
-      )}
-
-      {/* Modals */}
-      <AddCarModal
-        isOpen={isAddCarOpen}
-        onClose={() => setIsAddCarOpen(false)}
-        onAddCar={handleAddCarToFleet}
-      />
-
-      <SettlementsModal
-        isOpen={isSettlementsOpen}
-        onClose={() => setIsSettlementsOpen(false)}
-      />
-
-      <RegisterDealerModal
-        isOpen={isRegisterDealerOpen}
-        onClose={() => setIsRegisterDealerOpen(false)}
-        onSuccess={() => {
-          showToast('تم إرسال طلب تسجيل معرضك بنجاح! شكراً لانضمامك إلى مشوار.');
-        }}
-      />
+      {!hideHeaderFooter && <Footer onNavigate={(s) => setCurrentScreen(s)} />}
 
       <AuthModal
         isOpen={showAuthModal}

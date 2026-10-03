@@ -13,7 +13,7 @@ export interface Car {
   transmission: string;
   seats: number;
   fuel: string;
-  status: 'available' | 'rented' | 'maintenance' | 'reserved';
+  status: "available" | "rented" | "maintenance" | "reserved";
   statusAr: string;
   image: string;
   isFeatured?: boolean;
@@ -41,7 +41,7 @@ export interface Booking {
   serviceFee: number;
   deposit: number;
   totalPrice: number;
-  status: 'confirmed' | 'completed' | 'cancelled' | 'pending';
+  status: "confirmed" | "completed" | "cancelled" | "pending";
   statusAr: string;
   officerName: string;
   officerPhone: string;
@@ -61,7 +61,7 @@ export interface DealerRequest {
   period: string;
   days: number;
   totalPrice: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'declined';
+  status: "pending" | "confirmed" | "completed" | "declined";
   statusAr: string;
   pickupTime: string;
 }
@@ -75,7 +75,7 @@ export interface RouteOption {
 
 export interface Profile {
   id: string;
-  role: \'customer\' | \'dealer\' | \'super_admin\';
+  role: "customer" | "dealer" | "car_owner" | "super_admin";
   full_name?: string;
   phone?: string;
 }
