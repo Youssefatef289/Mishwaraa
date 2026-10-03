@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 
 interface HeaderProps {
-  currentScreen: "home" | "checkout" | "confirmation" | "bookings" | "dealer" | "admin" | "owner" | "profile" | "dealer_profile";
-  onNavigate: (screen: "home" | "checkout" | "confirmation" | "bookings" | "dealer" | "admin" | "owner" | "profile" | "dealer_profile") => void;
+  currentScreen: "home" | "checkout" | "confirmation" | "bookings" | "dealer";
+  onNavigate: (
+    screen: "home" | "checkout" | "confirmation" | "bookings" | "dealer",
+  ) => void;
   isMobileView?: boolean;
   onToggleMobileView?: () => void;
   onOpenRegisterDealerModal?: () => void;
@@ -21,123 +23,203 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   onSignOut,
 }) => {
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm transition-all duration-300">
-      <div className="h-16 md:h-20 max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4 lg:gap-8">
-          <button
-            onClick={() => onNavigate("home")}
-            className="flex items-center gap-2 cursor-pointer text-right group"
-          >
-            <span className="font-sans font-black text-2xl text-[#b7791f]">
-              مشوار
-            </span>
-          </button>
+    <header className="sticky top-0 w-full z-50 bg-[#ffffff]/95 backdrop-blur-md shadow-[0_1px_8px_rgba(20,23,28,0.04)]">
+      {/* Top Device Switcher / Screen Jumper bar for ease of testing all screens */}
+      <div className="bg-[#1e232b] text-[#eaf1ff] text-xs px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 border-b border-[#3aa6a6]/30">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#3aa6a6] animate-pulse"></span>
+          <span className="font-mono-numeric text-[11px] text-[#ffdcbf] font-bold">
+            EG-HIGHWAY // LIVE NETWORK
+          </span>
+          <span className="text-[#dfe9fa]/70 hidden sm:inline">
+            منصة حجز سيارات السفر المعتمدة
+          </span>
+        </div>
 
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-bold">
+        <div className="flex items-center gap-2">
+          {/* Quick Screen Selector */}
+          <span className="text-[#dfe9fa]/60 text-[11px] hidden md:inline">
+            الانتقال السريع:
+          </span>
+          <div className="inline-flex rounded-md p-0.5 bg-[#14171c] text-[11px]">
             <button
               onClick={() => onNavigate("home")}
-              className={`py-1 transition-colors cursor-pointer ${
+              className={`px-2 py-0.5 rounded transition-all ${
                 currentScreen === "home"
-                  ? "text-[#b7791f] border-b-2 border-[#b7791f]"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-[#c97a1e] text-white font-bold"
+                  : "text-[#dfe9fa]/70 hover:text-white"
               }`}
             >
               الرئيسية
             </button>
             <button
               onClick={() => onNavigate("checkout")}
-              className={`py-1 transition-colors cursor-pointer ${
+              className={`px-2 py-0.5 rounded transition-all ${
                 currentScreen === "checkout"
-                  ? "text-[#b7791f] border-b-2 border-[#b7791f]"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-[#c97a1e] text-white font-bold"
+                  : "text-[#dfe9fa]/70 hover:text-white"
               }`}
             >
-              السيارات
+              حجز السيارة
             </button>
             <button
-              onClick={() => onNavigate("dealer_profile")}
-              className={`py-1 transition-colors cursor-pointer ${
-                currentScreen === "dealer_profile"
-                  ? "text-[#b7791f] border-b-2 border-[#b7791f]"
-                  : "text-gray-600 hover:text-gray-900"
+              onClick={() => onNavigate("confirmation")}
+              className={`px-2 py-0.5 rounded transition-all ${
+                currentScreen === "confirmation"
+                  ? "bg-[#c97a1e] text-white font-bold"
+                  : "text-[#dfe9fa]/70 hover:text-white"
               }`}
             >
-              المعارض
+              التذكرة الرقمية
             </button>
-            {userName && (
-              <button
-                onClick={() => onNavigate("bookings")}
-                className={`py-1 transition-colors cursor-pointer ${
-                  currentScreen === "bookings"
-                    ? "text-[#b7791f] border-b-2 border-[#b7791f]"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                حجوزاتي
-              </button>
-            )}
-            <button className="py-1 transition-colors cursor-pointer text-gray-600 hover:text-gray-900">
-              تواصل معنا
+            <button
+              onClick={() => onNavigate("bookings")}
+              className={`px-2 py-0.5 rounded transition-all ${
+                currentScreen === "bookings"
+                  ? "bg-[#c97a1e] text-white font-bold"
+                  : "text-[#dfe9fa]/70 hover:text-white"
+              }`}
+            >
+              حجوزاتي
+            </button>
+            <button
+              onClick={() => onNavigate("dealer")}
+              className={`px-2 py-0.5 rounded transition-all ${
+                currentScreen === "dealer"
+                  ? "bg-[#c97a1e] text-white font-bold"
+                  : "text-[#dfe9fa]/70 hover:text-white"
+              }`}
+            >
+              لوحة المعارض
+            </button>
+          </div>
+
+          {/* Device Viewport Toggle (Desktop / Mobile Simulator) */}
+          {onToggleMobileView && (
+            <button
+              onClick={onToggleMobileView}
+              title="تبديل وضع العرض بين الهاتف وسطح المكتب"
+              className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                isMobileView
+                  ? "bg-[#3aa6a6] text-[#002020] border-[#3aa6a6]"
+                  : "bg-transparent text-[#ffdcbf] border-[#ffdcbf]/40 hover:bg-white/10"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[14px]">
+                {isMobileView ? "stay_current_portrait" : "desktop_windows"}
+              </span>
+              <span>{isMobileView ? "وضع الهاتف" : "سطح المكتب"}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Brand Navigation Bar */}
+      <div className="h-16 md:h-20 max-w-[960px] mx-auto px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-4 lg:gap-6">
+          {/* Mishwar Egyptian Highway Sign Logo */}
+          <button
+            onClick={() => onNavigate("home")}
+            className="flex items-center gap-2 cursor-pointer text-right group"
+          >
+            <div className="relative bg-[#eef4ff] px-2.5 py-1 rounded border border-[#d9c3b1] flex items-center gap-1.5 shadow-xs group-hover:border-[#884e00] transition-colors">
+              <span className="w-1 h-1 rounded-full bg-[#867465]"></span>
+              <span className="font-sans font-bold text-xl text-[#884e00]">
+                مشوار
+              </span>
+              <span className="font-mono-numeric text-[11px] text-[#0f6969] uppercase bg-[#a4f0ef]/50 px-1 py-0.5 rounded font-bold">
+                EGY
+              </span>
+              <span className="w-1 h-1 rounded-full bg-[#867465]"></span>
+            </div>
+            <span className="hidden xl:inline text-[11px] text-[#534437] font-medium leading-tight">
+              منصة تأجير السيارات الأولى في مصر
+            </span>
+          </button>
+
+          {/* Primary Nav Menu (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-4 text-sm font-medium">
+            <button
+              onClick={() => onNavigate("home")}
+              className={`py-1 transition-colors cursor-pointer ${
+                currentScreen === "home"
+                  ? "text-[#884e00] font-bold border-b-2 border-[#884e00]"
+                  : "text-[#534437] hover:text-[#121c28]"
+              }`}
+            >
+              الرئيسية
+            </button>
+            <button
+              onClick={() => onNavigate("home")}
+              className={`py-1 transition-colors cursor-pointer text-[#534437] hover:text-[#121c28]'`}
+            >
+              تصفح السيارات
+            </button>
+            <button
+              onClick={() => onNavigate("bookings")}
+              className={`py-1 transition-colors cursor-pointer ${
+                currentScreen === "bookings"
+                  ? "text-[#884e00] font-bold border-b-2 border-[#884e00]"
+                  : "text-[#534437] hover:text-[#121c28]"
+              }`}
+            >
+              حجوزاتي
+            </button>
+            <button
+              onClick={() => onNavigate("dealer")}
+              className={`py-1 transition-colors cursor-pointer ${
+                currentScreen === "dealer"
+                  ? "text-[#884e00] font-bold border-b-2 border-[#884e00]"
+                  : "text-[#534437] hover:text-[#121c28]"
+              }`}
+            >
+              لوحة تحكم المعارض
             </button>
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
-          {!userName ? (
-            <>
-              <button
-                onClick={onOpenAuth}
-                className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-xl text-gray-700 bg-gray-50 hover:bg-gray-100 transition-all text-sm font-bold cursor-pointer"
-              >
-                تسجيل الدخول
-              </button>
-              <button
-                onClick={onOpenAuth}
-                className="inline-flex items-center justify-center px-4 py-2 rounded-xl text-white bg-[#b7791f] hover:bg-[#d69e2e] transition-all text-sm font-bold cursor-pointer shadow-md"
-              >
-                إنشاء حساب
-              </button>
-            </>
-          ) : (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="inline-flex items-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors px-3 py-1.5 rounded-full border border-gray-200 cursor-pointer"
-              >
-                <img
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full object-cover"
-                  src="https://ui-avatars.com/api/?name=User&background=b7791f&color=fff"
-                />
-                <span className="hidden sm:inline text-sm font-bold text-gray-800">
-                  {userName}
-                </span>
-                <span className="material-symbols-outlined text-[20px] text-gray-500">
-                  expand_more
-                </span>
-              </button>
+        {/* Right CTA & Account Profile */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => {
+              if (onOpenRegisterDealerModal) {
+                onOpenRegisterDealerModal();
+              } else {
+                onNavigate("dealer");
+              }
+            }}
+            className="hidden sm:inline-flex items-center justify-center px-3.5 py-1.5 rounded text-[#0f6969] border border-[#0f6969] hover:bg-[#0f6969] hover:text-white transition-all text-xs font-bold cursor-pointer"
+          >
+            سجّل معرضك
+          </button>
 
-              {isProfileDropdownOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50 animate-[fadeIn_0.2s_ease-out]">
-                  <button onClick={() => { setIsProfileDropdownOpen(false); onNavigate('profile'); }} className="w-full text-right px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50">حسابي</button>
-                  <button onClick={() => { setIsProfileDropdownOpen(false); onNavigate('bookings'); }} className="w-full text-right px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50">حجوزاتي</button>
-                  <button onClick={() => setIsProfileDropdownOpen(false)} className="w-full text-right px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-between">الرسائل <span className="bg-red-500 text-white text-[10px] px-1.5 rounded-full">2</span></button>
-                  <button onClick={() => setIsProfileDropdownOpen(false)} className="w-full text-right px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50">الإشعارات</button>
-                  <div className="h-px bg-gray-100 my-1"></div>
-                  {onSignOut && (
-                    <button onClick={() => { setIsProfileDropdownOpen(false); onSignOut(); }} className="w-full text-right px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50">
-                      تسجيل الخروج
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+          <button
+            onClick={() => (userName ? onNavigate("bookings") : onOpenAuth?.())}
+            className="inline-flex items-center gap-2 bg-[#e5efff] hover:bg-[#dfe9fa] transition-colors px-2.5 py-1 rounded-full border border-[#d9c3b1] cursor-pointer"
+          >
+            <span className="hidden sm:inline text-xs font-medium text-[#121c28]">
+              {userName ?? "حسابي"}
+            </span>
+            <img
+              alt="Profile"
+              className="w-7 h-7 rounded-full object-cover ring-1 ring-[#884e00]/20"
+              src="https://lh3.googleusercontent.com/aida/AEtjO1UEkxMemjP9Ew19bEaX8hcWGBp8Rq3UxWll9VMOKUjUMpZaQUJHB1ygwzwLPWCVePi0vxGxSmsBW5MU1QfdkrI3PyM_zvpfkhd9xbvJr20dEpQ1edI7sn3IWMEjGWkTaL6q5DyO7EwiEUjLeB_0UP2bLyIpL5wU0rKjSgb4OV2J0mCYkOC-ccFn1iYYXWCOrgzFnMKYwyO_lPvpySCOOK-b16R1_IQC7tz8N96SxXVdjmqlN4xZHZq_sEA"
+            />
+          </button>
+          {userName && onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="text-xs font-bold text-[#534437] hover:text-[#884e00] cursor-pointer"
+            >
+              خروج
+            </button>
           )}
         </div>
       </div>
+
+      {/* Dashed Road Motif Accent */}
+      <div className="w-full h-0.5 border-b-2 border-dashed border-[#884e00]/30" />
     </header>
   );
 };
