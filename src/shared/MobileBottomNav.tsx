@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface MobileBottomNavProps {
-  currentScreen: 'home' | 'checkout' | 'confirmation' | 'bookings' | 'dealer';
-  onNavigate: (screen: 'home' | 'checkout' | 'confirmation' | 'bookings' | 'dealer') => void;
+  currentScreen: 'home' | 'checkout' | 'confirmation' | 'bookings' | 'dealer' | 'admin' | 'owner' | 'profile' | 'dealer_profile';
+  onNavigate: (screen: 'home' | 'checkout' | 'confirmation' | 'bookings' | 'dealer' | 'admin' | 'owner' | 'profile' | 'dealer_profile') => void;
   onCallSupport: () => void;
 }
 
@@ -12,87 +12,71 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onCallSupport,
 }) => {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-[#d9c3b1]/40 shadow-[0_-2px_10px_rgba(20,23,28,0.06)] pb-safe">
-      <div className="flex justify-around items-center h-16 max-w-lg mx-auto px-2">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe font-['Tajawal']">
+      <div className="flex justify-between items-center h-16 px-4">
+        
         {/* Home */}
         <button
           onClick={() => onNavigate('home')}
-          className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] py-1 cursor-pointer transition-colors ${
-            currentScreen === 'home' ? 'text-[#884e00] font-bold' : 'text-[#534437]'
+          className={`flex flex-col items-center justify-center gap-1 min-w-[4rem] transition-colors ${
+            currentScreen === 'home' ? 'text-[#c97a1e]' : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          <span
-            className="material-symbols-outlined text-[22px]"
-            style={{ fontVariationSettings: currentScreen === 'home' ? "'FILL' 1" : "'FILL' 0" }}
-          >
+          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: currentScreen === 'home' ? "'FILL' 1" : "'FILL' 0" }}>
             home
           </span>
-          <span className="text-[11px]">الرئيسية</span>
+          <span className={`text-[10px] ${currentScreen === 'home' ? 'font-black' : 'font-bold'}`}>الرئيسية</span>
         </button>
 
-        {/* Cars Catalog */}
+        {/* Cars (Checkout) */}
         <button
-          onClick={() => onNavigate('home')}
-          className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] py-1 cursor-pointer transition-colors ${
-            currentScreen === 'checkout' ? 'text-[#884e00] font-bold' : 'text-[#534437]'
+          onClick={() => onNavigate('checkout')}
+          className={`flex flex-col items-center justify-center gap-1 min-w-[4rem] transition-colors ${
+            currentScreen === 'checkout' ? 'text-[#c97a1e]' : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          <span
-            className="material-symbols-outlined text-[22px]"
-            style={{ fontVariationSettings: currentScreen === 'checkout' ? "'FILL' 1" : "'FILL' 0" }}
-          >
+          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: currentScreen === 'checkout' ? "'FILL' 1" : "'FILL' 0" }}>
             directions_car
           </span>
-          <span className="text-[11px]">السيارات</span>
+          <span className={`text-[10px] ${currentScreen === 'checkout' ? 'font-black' : 'font-bold'}`}>السيارات</span>
         </button>
 
-        {/* My Bookings */}
+        {/* FAB (Floating Action Button for Support/Call) */}
+        <div className="relative -top-5">
+          <button
+            onClick={onCallSupport}
+            className="w-14 h-14 bg-[#121c28] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#121c28]/30 hover:bg-[#c97a1e] transition-colors hover:-translate-y-1"
+          >
+            <span className="material-symbols-outlined text-[28px] animate-pulse">support_agent</span>
+          </button>
+        </div>
+
+        {/* Bookings */}
         <button
           onClick={() => onNavigate('bookings')}
-          className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] py-1 cursor-pointer transition-colors ${
-            currentScreen === 'bookings' || currentScreen === 'confirmation'
-              ? 'text-[#884e00] font-bold'
-              : 'text-[#534437]'
+          className={`flex flex-col items-center justify-center gap-1 min-w-[4rem] transition-colors ${
+            currentScreen === 'bookings' ? 'text-[#c97a1e]' : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          <span
-            className="material-symbols-outlined text-[22px]"
-            style={{
-              fontVariationSettings:
-                currentScreen === 'bookings' || currentScreen === 'confirmation'
-                  ? "'FILL' 1"
-                  : "'FILL' 0",
-            }}
-          >
-            confirmation_number
+          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: currentScreen === 'bookings' ? "'FILL' 1" : "'FILL' 0" }}>
+            receipt_long
           </span>
-          <span className="text-[11px]">حجوزاتي</span>
+          <span className={`text-[10px] ${currentScreen === 'bookings' ? 'font-black' : 'font-bold'}`}>حجوزاتي</span>
         </button>
 
-        {/* Dealer / Help */}
+        {/* Profile */}
         <button
-          onClick={() => onNavigate('dealer')}
-          className={`flex flex-col items-center justify-center gap-0.5 min-w-[64px] py-1 cursor-pointer transition-colors ${
-            currentScreen === 'dealer' ? 'text-[#884e00] font-bold' : 'text-[#534437]'
+          onClick={() => onNavigate('profile')}
+          className={`flex flex-col items-center justify-center gap-1 min-w-[4rem] transition-colors ${
+            currentScreen === 'profile' ? 'text-[#c97a1e]' : 'text-gray-400 hover:text-gray-600'
           }`}
         >
-          <span
-            className="material-symbols-outlined text-[22px]"
-            style={{ fontVariationSettings: currentScreen === 'dealer' ? "'FILL' 1" : "'FILL' 0" }}
-          >
-            storefront
+          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: currentScreen === 'profile' ? "'FILL' 1" : "'FILL' 0" }}>
+            person
           </span>
-          <span className="text-[11px]">المعارض</span>
+          <span className={`text-[10px] ${currentScreen === 'profile' ? 'font-black' : 'font-bold'}`}>حسابي</span>
         </button>
 
-        {/* Support Hotline */}
-        <button
-          onClick={onCallSupport}
-          className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] py-1 cursor-pointer transition-colors text-[#0f6969]"
-        >
-          <span className="material-symbols-outlined text-[22px]">support_agent</span>
-          <span className="text-[11px]">طوارئ 19822</span>
-        </button>
       </div>
     </nav>
   );
