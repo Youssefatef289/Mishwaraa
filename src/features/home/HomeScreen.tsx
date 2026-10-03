@@ -45,9 +45,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const filteredCars = activeCategory === "all"
       ? availableCars
       : availableCars.filter((c) => {
-          if (activeCategory === "suv" && c.categoryEn === "suv") return true;
-          if (activeCategory === "sedan" && c.categoryEn === "economy") return true;
-          if (activeCategory === "luxury" && c.categoryEn === "luxury") return true;
+          if (activeCategory === "suv" && c.category === "suv") return true;
+          if (activeCategory === "sedan" && c.category === "economy") return true;
+          if (activeCategory === "luxury" && c.category === "luxury") return true;
           return false;
         });
 
