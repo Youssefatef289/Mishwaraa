@@ -1,136 +1,144 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/src/lib/supabase';
-import { SupportChat } from '@/src/shared/SupportChat';
 
 interface AdminScreenProps {
   currentUserId: string | null;
   onBackToHome: () => void;
 }
 
-interface DealerRow {
-  id: string;
-  name: string;
-  city: string;
-  status: string;
-}
-
-/** شاشة الإدارة — عرض المعارض والرد على طلبات الدعم */
 export const AdminScreen: React.FC<AdminScreenProps> = ({ currentUserId, onBackToHome }) => {
-  const [dealers, setDealers] = useState<DealerRow[]>([]);
-  const [selectedDealerId, setSelectedDealerId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-  useEffect(() => {
-    if (!supabase) { setLoading(false); return; }
-    (async () => {
-      const { data, error } = await supabase
-        .from('dealers')
-        .select('id, name, city, status')
-        .order('created_at', { ascending: false })
-        .limit(50);
-      if (!error && data) setDealers(data as DealerRow[]);
-      setLoading(false);
-    })();
-  }, []);
-
-  return (
-    <div className="w-full min-h-screen bg-[#f8f9ff] flex flex-col">
-      {/* Header */}
-      <div className="h-16 bg-white/95 backdrop-blur-md shadow-xs border-b border-[#d9c3b1]/40 z-40 flex items-center justify-between px-4 sm:px-8">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-[#884e00] text-[22px]">admin_panel_settings</span>
-          <h1 className="font-bold text-base text-[#121c28]">لوحة إدارة مشوار</h1>
-          <span className="font-mono-numeric text-xs text-[#0f6969] bg-[#a4f0ef]/50 px-2 py-0.5 rounded font-bold">
-            SUPER ADMIN
-          </span>
+  const renderSidebar = () => (
+    <aside className="hidden lg:flex flex-col w-64 bg-[#121c28] text-white min-h-screen fixed right-0 top-0 z-40 pt-24 pb-8">
+      <div className="px-6 mb-8 text-center">
+        <div className="w-16 h-16 bg-[#c97a1e] rounded-full flex items-center justify-center mx-auto mb-3 shadow-[0_0_20px_rgba(201,122,30,0.4)]">
+          <span className="material-symbols-outlined text-3xl">admin_panel_settings</span>
         </div>
-        <button
+        <h2 className="text-xl font-black">لوحة الإدارة العليا</h2>
+        <p className="text-xs text-gray-400 font-bold mt-1">Super Admin Dashboard</p>
+      </div>
+
+      <nav className="flex-1 px-4 space-y-2 mt-4">
+        {[
+          { id: 'dashboard', icon: 'dashboard', label: 'الرئيسية' },
+          { id: 'users', icon: 'group', label: 'المستخدمين' },
+          { id: 'dealers', icon: 'storefront', label: 'المعارض', badge: '3 طلبات' },
+          { id: 'owners', icon: 'key', label: 'مُلاك السيارات' },
+          { id: 'cars', icon: 'directions_car', label: 'السيارات' },
+          { id: 'bookings', icon: 'receipt_long', label: 'الحجوزات' },
+          { id: 'settings', icon: 'settings', label: 'الإعدادات' },
+        ].map(item => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-bold text-sm ${
+              activeTab === item.id 
+                ? 'bg-[#c97a1e] text-white shadow-md' 
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+              {item.label}
+            </div>
+            {item.badge && (
+              <span className="px-2 py-0.5 bg-red-500 text-white rounded-full text-[10px] font-black">
+                {item.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      <div className="px-4 mt-auto">
+        <button 
           onClick={onBackToHome}
-          className="text-xs font-bold text-[#0f6969] hover:text-[#884e00] bg-[#eef4ff] px-3 py-1.5 rounded-lg border border-[#d9c3b1]/40 transition-colors flex items-center gap-1 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all font-bold text-sm"
         >
-          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-          <span>العودة للرئيسية</span>
+          <span className="material-symbols-outlined text-[20px]">logout</span>
+          الخروج للموقع
         </button>
       </div>
+    </aside>
+  );
 
-      <div className="flex-1 flex flex-col lg:flex-row max-w-[1200px] mx-auto w-full p-4 sm:p-6 gap-6">
-        {/* قائمة المعارض */}
-        <div className="lg:w-80 shrink-0 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-sm text-[#121c28]">المعارض المسجلة</h2>
-            <span className="text-[11px] text-[#534437] bg-[#eef4ff] px-2 py-0.5 rounded font-bold font-mono-numeric">
-              {dealers.length} معرض
-            </span>
-          </div>
+  const renderDashboardHome = () => (
+    <div className="space-y-8 animate-[fadeIn_0.3s_ease-out]">
+      <div>
+        <h2 className="text-2xl font-black text-gray-900 mb-1">نظرة عامة على النظام</h2>
+        <p className="text-gray-500 font-medium">إحصائيات المنصة الشاملة</p>
+      </div>
 
-          {loading ? (
-            <div className="text-center text-xs text-[#534437] py-8">جارٍ التحميل...</div>
-          ) : dealers.length === 0 ? (
-            <div className="text-center text-xs text-[#534437] py-8">لا توجد معارض مسجلة بعد</div>
-          ) : (
-            <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
-              {dealers.map((dealer) => (
-                <button
-                  key={dealer.id}
-                  onClick={() => setSelectedDealerId(dealer.id)}
-                  className={`w-full text-right p-3 rounded-xl border transition-all cursor-pointer ${
-                    selectedDealerId === dealer.id
-                      ? 'bg-[#884e00]/10 border-[#884e00] shadow-sm'
-                      : 'bg-white border-[#d9c3b1]/40 hover:border-[#884e00]/40'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-[#121c28]">{dealer.name}</span>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                        dealer.status === 'approved'
-                          ? 'bg-[#9ff5c1] text-[#002111]'
-                          : dealer.status === 'pending'
-                            ? 'bg-[#ffdcbf] text-[#884e00]'
-                            : 'bg-[#ffdad6] text-[#ba1a1a]'
-                      }`}
-                    >
-                      {dealer.status === 'approved' ? 'معتمد' : dealer.status === 'pending' ? 'قيد المراجعة' : dealer.status}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#534437] flex items-center gap-1 mt-1">
-                    <span className="material-symbols-outlined text-[12px]">location_on</span>
-                    {dealer.city}
-                  </span>
-                </button>
-              ))}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        {[
+          { label: 'إجمالي المستخدمين', value: '1,245', icon: 'group', color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'المعارض المعتمدة', value: '42', icon: 'storefront', color: 'text-[#c97a1e]', bg: 'bg-[#c97a1e]/10' },
+          { label: 'مُلاك السيارات', value: '156', icon: 'key', color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'السيارات المتاحة', value: '890', icon: 'directions_car', color: 'text-[#2c7a7b]', bg: 'bg-[#2c7a7b]/10' },
+          { label: 'الحجوزات النشطة', value: '124', icon: 'receipt_long', color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'الإيرادات (الشهر)', value: '450k', icon: 'payments', color: 'text-green-600', bg: 'bg-green-50' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white p-5 rounded-[1.5rem] border border-gray-100 shadow-sm flex flex-col items-start gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
+              <span className="material-symbols-outlined text-[24px]">{stat.icon}</span>
             </div>
-          )}
-        </div>
+            <div>
+              <span className="block text-xs font-bold text-gray-500 mb-1">{stat.label}</span>
+              <span className="block text-2xl font-black text-gray-900">{stat.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        {/* نافذة المحادثة */}
-        <div className="flex-1">
-          {selectedDealerId ? (
-            <div className="bg-white rounded-xl shadow-xs border border-[#d9c3b1]/40 p-4">
-              <div className="mb-3 flex items-center gap-2 pb-2 border-b border-[#d9c3b1]/30">
-                <span className="material-symbols-outlined text-[#0f6969] text-[20px]">support_agent</span>
-                <div>
-                  <span className="font-bold text-sm text-[#121c28]">
-                    محادثة الدعم — {dealers.find((d) => d.id === selectedDealerId)?.name}
-                  </span>
-                  <p className="text-[10px] text-[#534437]">ردودك ستظهر للمعرض فوراً عبر Realtime</p>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* Approvals Needed */}
+        <div className="bg-white rounded-[1.5rem] border border-gray-100 shadow-sm p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+              <span className="material-symbols-outlined text-red-500">warning</span>
+              معارض بانتظار الموافقة
+            </h3>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm text-gray-400">
+                    <span className="material-symbols-outlined">store</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-sm">معرض الأبطال للسيارات</h4>
+                    <p className="text-xs text-gray-500">القاهرة • مسجل منذ ساعتين</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition-colors shadow-sm">اعتماد</button>
+                  <button className="px-4 py-2 bg-white text-gray-600 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">مراجعة</button>
                 </div>
               </div>
-              <SupportChat
-                dealerId={selectedDealerId}
-                currentUserId={currentUserId}
-                title={`محادثة مع ${dealers.find((d) => d.id === selectedDealerId)?.name ?? 'المعرض'}`}
-                alwaysOpen
-              />
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-xs border border-[#d9c3b1]/40 p-8 text-center">
-              <span className="material-symbols-outlined text-[#d9c3b1] text-[48px] mb-3 block">forum</span>
-              <p className="text-sm text-[#534437]">اختر معرضاً من القائمة لبدء محادثة الدعم</p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#f8f9fa] font-['Tajawal'] flex">
+      {renderSidebar()}
+      
+      <main className="flex-1 lg:mr-64 p-4 sm:p-8 pt-24 pb-24 lg:pb-8">
+        <div className="max-w-6xl mx-auto">
+          {activeTab === 'dashboard' ? renderDashboardHome() : (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <span className="material-symbols-outlined text-6xl mb-4 text-[#c97a1e]/50">construction</span>
+              <h3 className="text-2xl font-black text-gray-900 mb-2">قسم تحت التطوير</h3>
+              <p className="font-medium text-gray-500">سيتم تفعيل هذه الشاشة في التحديث القادم.</p>
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };
