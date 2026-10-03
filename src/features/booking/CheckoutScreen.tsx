@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Car, Booking } from '@/src/core/types';
-import { ROUTE_OPTIONS } from '@/src/data/mockData';
 import { EgyptianPlateBadge } from '@/src/shared/EgyptianPlateBadge';
-import { HighwayDivider } from '@/src/shared/HighwayDivider';
 
 interface CheckoutScreenProps {
   selectedCar: Car;
@@ -10,611 +8,293 @@ interface CheckoutScreenProps {
   onBackToHome: () => void;
 }
 
+const DESTINATIONS = [
+  { id: 'sahel', name: 'الساحل الشمالي', distanceKm: 280 },
+  { id: 'alex', name: 'الإسكندرية', distanceKm: 220 },
+  { id: 'cairo', name: 'داخل القاهرة', distanceKm: 100 },
+  { id: 'sokhna', name: 'العين السخنة', distanceKm: 140 },
+  { id: 'hurghada', name: 'الغردقة', distanceKm: 460 },
+  { id: 'sharm', name: 'شرم الشيخ', distanceKm: 500 },
+];
+
 export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
   selectedCar,
   onConfirmBooking,
   onBackToHome,
 }) => {
-  const [selectedRouteId, setSelectedRouteId] = useState('sahel');
-  const [days, setDays] = useState(4);
-  const [pickupDate, setPickupDate] = useState('2025-07-18');
-  const [pickupTime, setPickupTime] = useState('10:00 ص');
-  const [returnDate, setReturnDate] = useState('2025-07-21');
-  const [returnTime, setReturnTime] = useState('08:00 م');
-  const [termsAccepted, setTermsAccepted] = useState(true);
+  const [selectedRouteId, setSelectedRouteId] = useState('cairo');
+  const [pickupDate, setPickupDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
+  
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState(false);
 
-  const selectedRoute =
-    ROUTE_OPTIONS.find((r) => r.id === selectedRouteId) || ROUTE_OPTIONS[0];
+  const selectedRoute = DESTINATIONS.find((r) => r.id === selectedRouteId) || DESTINATIONS[0];
 
-  // Dynamic calculations
+  // Basic days calc
+  const calculateDays = () => {
+    if (!pickupDate || !returnDate) return 1;
+    const start = new Date(pickupDate);
+    const end = new Date(returnDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 1;
+  };
+
+  const days = calculateDays();
   const dailyPrice = selectedCar.dailyPrice;
   const rentalSubtotal = dailyPrice * days;
-  const insuranceFee = selectedCar.insurancePrice;
-  const serviceFee = selectedCar.serviceFee;
-  const deposit = selectedCar.deposit;
+  const insuranceFee = selectedCar.insurancePrice || 0;
+  const serviceFee = selectedCar.serviceFee || 0;
+  const deposit = selectedCar.deposit || 0;
   const totalPrice = rentalSubtotal + insuranceFee + serviceFee;
 
   const handleConfirm = () => {
-    if (!termsAccepted || isSubmitting) return;
+    if (!termsAccepted || isSubmitting || !pickupDate || !returnDate) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setSuccessMessage(true);
-      setTimeout(() => {
-        const newBooking: Booking = {
-          id: `b-${Math.floor(1000 + Math.random() * 9000)}`,
-          code: `MSH-${selectedCar.plateNumbers}`,
-          car: selectedCar,
-          pickupLocation: 'فرع التجمع الخامس (القاهرة) - شارع التسعين الشمالي',
-          dropoffLocation: `${selectedRoute.name} - نقطة تسليم مشوار المعتمدة`,
-          pickupDate: 'الخميس 18 يوليو 2025',
-          pickupTime: pickupTime,
-          returnDate: 'الأحد 21 يوليو 2025',
-          returnTime: returnTime,
-          days: days,
-          distanceKm: selectedRoute.distanceKm,
-          dailyPrice: dailyPrice,
-          rentalSubtotal: rentalSubtotal,
-          insuranceFee: insuranceFee,
-          serviceFee: serviceFee,
-          deposit: deposit,
-          totalPrice: totalPrice,
-          status: 'confirmed',
-          statusAr: 'مؤكد وجاهز للاستلام',
-          officerName: 'كابتن عصام منصور',
-          officerPhone: '01098877665',
-          officerAvatar:
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuCJlus0IDjhG5bWPV86KNeaAtk4KVpg54S8ECBRN1Rf8bhUtUfeAg7pNgXY00mzZdL-Eu05hj1Ks12QyPiiiPKl0lqipYvBwG0teYl8op3UsCGTFkxYeI9RVOALA4HlSsavFL4hZyZa15n4ET50k3l0uggUY7GLBs7PnTJq_Tr0X1XAelFjZMjZj3KOz9dYC131HvzikYLh8PNwaUDqkpGvuVwpUjS0Z5ccu6zYSN-eR51O-zilO4xw',
-          insurancePolicyNumber: 'POL-EGY-2025-09941-SH',
-          createdAt: new Date().toISOString(),
-        };
+    const booking: Booking = {
+      id: `BKG-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+      code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      car: selectedCar,
+      pickupLocation: 'مقر المعرض',
+      dropoffLocation: selectedRoute.name,
+      pickupDate: pickupDate,
+      pickupTime: '10:00 ص',
+      returnDate: returnDate,
+      returnTime: '10:00 ص',
+      days,
+      distanceKm: selectedRoute.distanceKm,
+      dailyPrice,
+      rentalSubtotal,
+      insuranceFee,
+      serviceFee,
+      deposit,
+      totalPrice,
+      status: 'pending',
+      statusAr: 'قيد المراجعة',
+      officerName: selectedCar.dealerName || 'المعرض',
+      officerPhone: '+20 100 000 0000',
+      officerAvatar: 'https://ui-avatars.com/api/?name=Dealer&background=121c28&color=fff',
+      insurancePolicyNumber: 'INS-0000',
+      createdAt: new Date().toISOString(),
+    };
 
-        onConfirmBooking(newBooking);
-      }, 1000);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      onConfirmBooking(booking);
     }, 1200);
   };
 
   return (
-    <div className="w-full max-w-[960px] mx-auto px-4 sm:px-6 py-6 min-h-[calc(100vh-100px)]">
-      {/* Top Breadcrumb / Back button */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={onBackToHome}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0f6969] hover:text-[#884e00] transition-colors cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          <span>الرجوع إلى قائمة أسطول السيارات</span>
-        </button>
-
-        <span className="text-xs text-[#534437] font-mono-numeric">
-          حجز فوري • بدون وساطة
-        </span>
+    <div className="w-full bg-[#f8f9fa] min-h-screen font-['Tajawal'] pb-24 md:pb-12">
+      {/* Top Header / Breadcrumb */}
+      <div className="bg-white border-b border-gray-100 py-4 px-4 sm:px-6 sticky top-16 md:top-20 z-30">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm">
+          <button onClick={onBackToHome} className="text-gray-500 hover:text-gray-900 transition-colors font-bold flex items-center gap-1">
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            عودة للسيارات
+          </button>
+          <span className="text-gray-300">/</span>
+          <span className="text-gray-900 font-bold">{selectedCar.name}</span>
+        </div>
       </div>
 
-      {/* Top Highway Step Progress Indicator (RTL layout) */}
-      <section className="w-full bg-white p-4 sm:p-5 rounded-xl shadow-xs mb-6 relative overflow-hidden border border-[#d9c3b1]/40">
-        {/* Ambient Highway Dash Track */}
-        <div className="absolute top-1/2 left-8 right-8 -translate-y-1/2 hidden md:block pointer-events-none">
-          <div className="w-full border-t-2 border-dashed border-[#884e00]/40" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-          {/* Step 1: Completed */}
-          <div className="flex items-center gap-3 bg-[#eef4ff] md:bg-transparent p-3 md:p-0 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-[#056a41] text-white flex items-center justify-center shadow-xs shrink-0">
-              <span className="material-symbols-outlined text-[20px]">check</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-mono-numeric text-xs text-[#056a41] font-bold tracking-wider">
-                المرحلة 01
-              </span>
-              <span className="font-bold text-sm text-[#121c28]">بيانات السيارة</span>
-            </div>
-          </div>
-
-          {/* Step 2: Active Target */}
-          <div className="flex items-center gap-3 bg-[#884e00]/10 md:bg-transparent p-3 md:p-0 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-[#884e00] text-white flex items-center justify-center shadow-md ring-4 ring-[#884e00]/20 shrink-0 font-mono-numeric font-bold text-sm">
-              02
-            </div>
-            <div className="flex flex-col">
-              <span className="font-mono-numeric text-xs text-[#884e00] font-bold tracking-wider">
-                المرحلة الحالية
-              </span>
-              <span className="font-bold text-sm text-[#121c28]">وجهة الرحلة والمدة</span>
-            </div>
-          </div>
-
-          {/* Step 3: Upcoming */}
-          <div className="flex items-center gap-3 opacity-60 bg-[#eef4ff] md:bg-transparent p-3 md:p-0 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-[#dfe9fa] text-[#534437] flex items-center justify-center shrink-0 font-mono-numeric font-bold text-sm">
-              03
-            </div>
-            <div className="flex flex-col">
-              <span className="font-mono-numeric text-xs text-[#534437] tracking-wider">
-                المرحلة الأخيرة
-              </span>
-              <span className="text-sm text-[#534437]">الحساب والتأكيد</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Two Column Layout: Main Form Flow vs Telematics Cluster */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left / Center Column: Steps Details (7 Cols) */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          {/* Card Step 1: Selected Car Telematics Summary */}
-          <div className="bg-white p-5 rounded-xl shadow-xs border border-[#d9c3b1]/40 flex flex-col gap-4 relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-1 border-b border-[#d9c3b1]/30">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#056a41] animate-pulse" />
-                <span className="font-mono-numeric text-xs text-[#056a41] font-bold uppercase">
-                  تم اختيار المركبة بنجاح
-                </span>
-              </div>
-
-              {/* Egyptian License Plate Badge */}
-              <EgyptianPlateBadge
-                letters={selectedCar.plateLetters}
-                numbers={selectedCar.plateNumbers}
-                statusText="متاح للحجز"
-                statusColor="tertiary"
-              />
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Car Image Preview */}
-              <div className="sm:w-5/12 h-44 rounded-lg overflow-hidden relative shadow-inner bg-[#dfe9fa]">
-                <img
-                  className="w-full h-full object-cover"
-                  src={selectedCar.image}
-                  alt={selectedCar.name}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Main Content (Left/Top on mobile) */}
+          <div className="lg:col-span-8 flex flex-col gap-8">
+            
+            {/* Gallery Section */}
+            <div className="bg-white rounded-[2rem] p-4 shadow-sm border border-gray-100 overflow-hidden">
+              <div className="relative h-[30vh] md:h-[500px] w-full rounded-[1.5rem] overflow-hidden group">
+                <img 
+                  src={selectedCar.image} 
+                  alt={selectedCar.name} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute bottom-2 right-2 bg-[#121c28]/80 backdrop-blur-md text-white px-2 py-0.5 rounded font-mono-numeric text-xs">
-                  موديل {selectedCar.year}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <div className="absolute bottom-6 right-6 text-white">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-3 py-1 bg-[#c97a1e] rounded-full text-xs font-black">{selectedCar.year}</span>
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold">{selectedCar.categoryAr}</span>
+                  </div>
+                  <h1 className="text-3xl md:text-5xl font-black mb-2 drop-shadow-lg">{selectedCar.name}</h1>
+                  <p className="text-white/80 font-medium flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px]">storefront</span>
+                    {selectedCar.dealerName || "معرض معتمد"}
+                  </p>
+                </div>
+                <div className="absolute bottom-6 left-6">
+                  <EgyptianPlateBadge letters={selectedCar.plateLetters} numbers={selectedCar.plateNumbers} />
+                </div>
+              </div>
+            </div>
+
+            {/* Specifications */}
+            <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-gray-100">
+              <h2 className="text-2xl font-black text-gray-900 mb-6">مواصفات السيارة</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { icon: 'speed', label: 'ناقل الحركة', value: selectedCar.transmission === 'automatic' ? 'أوتوماتيك' : 'مانيوال' },
+                  { icon: 'local_gas_station', label: 'الوقود', value: selectedCar.fuel === 'gasoline' ? 'بنزين' : 'كهرباء' },
+                  { icon: 'airline_seat_recline_normal', label: 'المقاعد', value: `${selectedCar.seats || 5} مقاعد` },
+                  { icon: 'add_road', label: 'الممشى', value: selectedCar.mileage || '10,000 كم' }
+                ].map((spec, i) => (
+                  <div key={i} className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-[#c97a1e]/20 hover:bg-[#c97a1e]/5 transition-all">
+                    <span className="material-symbols-outlined text-3xl text-gray-400 mb-2">{spec.icon}</span>
+                    <span className="text-xs text-gray-500 font-bold mb-1">{spec.label}</span>
+                    <span className="text-sm font-black text-gray-900">{spec.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Booking Details Form */}
+            <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-gray-100">
+              <h2 className="text-2xl font-black text-gray-900 mb-6">تفاصيل الحجز</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">تاريخ الاستلام</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="material-symbols-outlined text-gray-400">calendar_today</span>
+                    </div>
+                    <input 
+                      type="date"
+                      value={pickupDate}
+                      onChange={(e) => setPickupDate(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-[#2c7a7b] focus:border-[#2c7a7b] block pr-12 p-3.5 font-bold outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">تاريخ التسليم</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                      <span className="material-symbols-outlined text-gray-400">event_available</span>
+                    </div>
+                    <input 
+                      type="date"
+                      value={returnDate}
+                      onChange={(e) => setReturnDate(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-[#2c7a7b] focus:border-[#2c7a7b] block pr-12 p-3.5 font-bold outline-none transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Car Specs Details */}
-              <div className="sm:w-7/12 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-bold text-lg text-[#121c28]">{selectedCar.name}</h2>
-                    <span className="bg-[#884e00]/10 text-[#884e00] px-2 py-0.5 rounded text-xs font-bold">
-                      الفئة الفاخرة
-                    </span>
-                  </div>
-
-                  {/* Verified Dealer Info */}
-                  <div className="flex items-start gap-2 mt-2 p-2 rounded bg-[#eef4ff]">
-                    <span
-                      className="material-symbols-outlined text-[#0f6969] text-[18px] mt-0.5"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-3">الوجهة المقصودة</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {DESTINATIONS.map((dest) => (
+                    <button
+                      key={dest.id}
+                      onClick={() => setSelectedRouteId(dest.id)}
+                      className={`p-3 rounded-xl border-2 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                        selectedRouteId === dest.id 
+                          ? 'border-[#2c7a7b] bg-[#2c7a7b]/10 text-[#2c7a7b]' 
+                          : 'border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-200'
+                      }`}
                     >
-                      verified
-                    </span>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-[#121c28] font-bold">
-                        {selectedCar.dealerName}
-                      </span>
-                      <span className="text-[11px] text-[#534437]">{selectedCar.location}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Inclusions Pill Grid */}
-                <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-dashed border-[#d9c3b1]/50 text-xs text-[#534437]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-[#056a41]">
-                      health_and_safety
-                    </span>
-                    <span>تأمين شامل ضد الغير</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-[#056a41]">
-                      published_with_changes
-                    </span>
-                    <span>فحص ميكانيكي معتمد</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-[#0f6969]">
-                      airline_seat_recline_extra
-                    </span>
-                    <span>مقاعد جلد مريحة</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[16px] text-[#0f6969]">
-                      ac_unit
-                    </span>
-                    <span>تكييف هواء مزدوج</span>
-                  </div>
+                      {selectedRouteId === dest.id && <span className="material-symbols-outlined text-[18px]">check_circle</span>}
+                      {dest.name}
+                    </button>
+                  ))}
                 </div>
               </div>
+
             </div>
+
           </div>
 
-          <HighwayDivider />
-
-          {/* Card Step 2: Trip & Destination Inputs */}
-          <div className="bg-white p-5 rounded-xl shadow-xs border border-[#d9c3b1]/40 flex flex-col gap-4">
-            <div className="flex items-center justify-between pb-1 border-b border-[#d9c3b1]/30">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-[#884e00] text-white flex items-center justify-center font-mono-numeric text-xs font-bold">
-                  02
+          {/* Sidebar (Right/Bottom on mobile) */}
+          <div className="lg:col-span-4">
+            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 sticky top-28">
+              <h3 className="text-xl font-black text-gray-900 mb-6">ملخص الحجز</h3>
+              
+              <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                  <span className="text-sm font-bold text-gray-600">سعر اليوم</span>
+                  <span className="font-black text-lg text-gray-900">{dailyPrice} ج.م</span>
                 </div>
-                <h3 className="font-bold text-base text-[#121c28]">
-                  تحديد مسار الرحلة والتواريخ
-                </h3>
-              </div>
-              <span className="text-xs text-[#884e00] bg-[#ffdcbf]/50 px-2 py-0.5 rounded font-bold">
-                نظام التعقب الكيلومتري
-              </span>
-            </div>
-
-            {/* Routes Form */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Departure City */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-[#121c28] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#884e00]">
-                    my_location
-                  </span>
-                  <span>نقطة الانطلاق (مقر المعرض)</span>
-                </label>
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    readOnly
-                    value="القاهرة (التجمع الخامس)"
-                    className="w-full h-11 bg-[#eef4ff] px-3 text-[#121c28] text-xs font-bold rounded shadow-inner cursor-not-allowed border border-[#d9c3b1]/40 focus:outline-none"
-                  />
-                  <span className="absolute left-3 material-symbols-outlined text-[#867465] text-[18px]">
-                    lock
-                  </span>
+                <div className="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                  <span className="text-sm font-bold text-gray-600">مدة الإيجار</span>
+                  <span className="font-black text-lg text-gray-900">{days} أيام</span>
                 </div>
-                <span className="text-[11px] text-[#534437]">
-                  الاستلام المباشر من فرع التجمع الخامس
-                </span>
-              </div>
-
-              {/* Destination City with Egyptian Routes Dropdown */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-[#121c28] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#0f6969]">
-                    pin_drop
-                  </span>
-                  <span>الوجهة ومسار السفر</span>
-                </label>
-                <div className="relative flex items-center">
-                  <select
-                    value={selectedRouteId}
-                    onChange={(e) => setSelectedRouteId(e.target.value)}
-                    className="w-full h-11 bg-[#e5efff] px-3 text-[#121c28] text-xs font-bold rounded shadow-xs border border-[#d9c3b1]/60 focus:outline-none focus:ring-2 focus:ring-[#884e00] appearance-none cursor-pointer"
-                  >
-                    {ROUTE_OPTIONS.map((route) => (
-                      <option key={route.id} value={route.id}>
-                        {route.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="absolute left-3 pointer-events-none material-symbols-outlined text-[#534437]">
-                    expand_more
-                  </span>
+                
+                <div className="h-px bg-gray-100 my-2"></div>
+                
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-bold">إجمالي الإيجار</span>
+                  <span className="font-bold text-gray-900">{rentalSubtotal} ج.م</span>
                 </div>
-                <span className="text-[11px] text-[#0f6969] font-medium">
-                  {selectedRoute.roadName} - مشمول بالدعم
-                </span>
-              </div>
-
-              {/* Pickup Date & Time */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-[#121c28] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#056a41]">
-                    calendar_today
-                  </span>
-                  <span>تاريخ وتوقيت الاستلام</span>
-                </label>
-                <div className="w-full h-11 bg-[#eef4ff] px-3 flex items-center justify-between rounded shadow-xs border border-[#d9c3b1]/40">
-                  <input
-                    type="date"
-                    value={pickupDate}
-                    onChange={(e) => setPickupDate(e.target.value)}
-                    className="bg-transparent font-mono-numeric text-xs font-bold text-[#121c28] outline-none"
-                  />
-                  <select
-                    value={pickupTime}
-                    onChange={(e) => setPickupTime(e.target.value)}
-                    className="bg-white px-2 py-0.5 rounded text-xs font-mono-numeric text-[#884e00] font-bold border border-[#d9c3b1]/40"
-                  >
-                    <option value="10:00 ص">10:00 ص</option>
-                    <option value="12:00 م">12:00 م</option>
-                    <option value="02:00 م">02:00 م</option>
-                  </select>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-bold">تأمين شامل (يومي)</span>
+                  <span className="font-bold text-gray-900">{insuranceFee > 0 ? `${insuranceFee} ج.م` : 'مجاناً'}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 font-bold">رسوم الخدمة</span>
+                  <span className="font-bold text-gray-900">{serviceFee > 0 ? `${serviceFee} ج.م` : 'مجاناً'}</span>
                 </div>
               </div>
 
-              {/* Return Date & Time */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-[#121c28] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px] text-[#884e00]">
-                    event_available
-                  </span>
-                  <span>تاريخ وتوقيت الإرجاع</span>
-                </label>
-                <div className="w-full h-11 bg-[#eef4ff] px-3 flex items-center justify-between rounded shadow-xs border border-[#d9c3b1]/40">
-                  <input
-                    type="date"
-                    value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
-                    className="bg-transparent font-mono-numeric text-xs font-bold text-[#121c28] outline-none"
-                  />
-                  <select
-                    value={returnTime}
-                    onChange={(e) => setReturnTime(e.target.value)}
-                    className="bg-white px-2 py-0.5 rounded text-xs font-mono-numeric text-[#884e00] font-bold border border-[#d9c3b1]/40"
-                  >
-                    <option value="08:00 م">08:00 م</option>
-                    <option value="10:00 م">10:00 م</option>
-                    <option value="06:00 م">06:00 م</option>
-                  </select>
+              <div className="p-4 bg-[#c97a1e]/10 rounded-xl mb-6">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-black text-[#b7791f]">الإجمالي المطلوب</span>
+                  <span className="text-3xl font-black text-[#b7791f]">{totalPrice}</span>
                 </div>
+                <div className="text-left text-xs font-bold text-[#b7791f]/70">ج.م</div>
               </div>
-            </div>
 
-            {/* Telematics Calculated Metric Chips */}
-            <div className="mt-1 p-3 bg-[#e5efff] rounded-lg grid grid-cols-2 gap-4 border border-[#d9c3b1]/40">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded bg-[#0f6969]/15 text-[#0f6969] flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">timer</span>
-                </div>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 mb-6 flex items-start gap-3">
+                <span className="material-symbols-outlined text-gray-400 mt-0.5">info</span>
                 <div>
-                  <span className="text-[11px] text-[#534437] block">المدة المحسوبة</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-[#121c28]">{days} أيام كاملة</span>
-                    <div className="inline-flex gap-1">
-                      <button
-                        onClick={() => setDays(Math.max(1, days - 1))}
-                        className="w-5 h-5 rounded bg-white text-xs font-bold flex items-center justify-center text-[#121c28] shadow-xs cursor-pointer hover:bg-[#dfe9fa]"
-                        title="إنقاص يوم"
-                      >
-                        -
-                      </button>
-                      <button
-                        onClick={() => setDays(days + 1)}
-                        className="w-5 h-5 rounded bg-white text-xs font-bold flex items-center justify-center text-[#121c28] shadow-xs cursor-pointer hover:bg-[#dfe9fa]"
-                        title="زيادة يوم"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 border-r border-[#d9c3b1]/50 pr-4">
-                <div className="w-10 h-10 rounded bg-[#884e00]/15 text-[#884e00] flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-[22px]">speed</span>
-                </div>
-                <div>
-                  <span className="text-[11px] text-[#534437] block">مسافة الطريق التقديرية</span>
-                  <span className="font-mono-numeric font-bold text-sm text-[#121c28]">
-                    {selectedRoute.distanceKm} كم ذهاب وعودة
+                  <span className="block text-sm font-bold text-gray-900 mb-1">تأمين مسترد</span>
+                  <span className="block text-xs font-medium text-gray-500 leading-relaxed">
+                    يتم دفع تأمين نقدي بقيمة {deposit} ج.م عند استلام السيارة ويسترد بالكامل عند إرجاعها سليمة.
                   </span>
                 </div>
               </div>
-            </div>
 
-            {/* Highway Safety Notice */}
-            <div className="flex items-center gap-2 bg-[#9ff5c1]/30 p-2.5 rounded text-[#056a41]">
-              <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span className="text-xs font-semibold">
-                مشمول بالدعم الميداني وتتبع الأعطال عبر بوابات الرسوم السريعة على مدار 24 ساعة.
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Digital Dashboard / Odometer Price Readout Panel (5 Cols) */}
-        <div className="lg:col-span-5 flex flex-col gap-4 lg:sticky lg:top-24">
-          {/* High-Tech Car Cluster Panel */}
-          <div className="bg-[#1E232B] text-white p-5 rounded-xl shadow-xl border-t-4 border-[#c97a1e] flex flex-col gap-4 relative overflow-hidden">
-            {/* Subtle Glow Grid Background Accent */}
-            <div className="absolute -top-12 -left-12 w-40 h-40 bg-[#3AA6A6]/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -right-12 w-40 h-40 bg-[#F2A93C]/10 rounded-full blur-2xl pointer-events-none" />
-
-            {/* Instrument Cluster Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#3AA6A6] animate-ping" />
-                <span className="font-mono-numeric text-xs text-[#3AA6A6] tracking-wider uppercase font-bold">
-                  حاسبة العداد الرقمي
+              <label className="flex items-start gap-3 mb-6 cursor-pointer group">
+                <div className="relative flex items-center justify-center mt-0.5">
+                  <input 
+                    type="checkbox" 
+                    className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded hover:border-[#2c7a7b] checked:bg-[#2c7a7b] checked:border-[#2c7a7b] transition-colors"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                  />
+                  <span className="material-symbols-outlined absolute text-white text-[16px] pointer-events-none opacity-0 peer-checked:opacity-100">check</span>
+                </div>
+                <span className="text-xs font-bold text-gray-600 leading-relaxed select-none">
+                  أوافق على <a href="#" className="text-[#2c7a7b] hover:underline">شروط وأحكام الإيجار</a> والمسؤولية الكاملة عن السيارة خلال فترة الحجز.
                 </span>
-              </div>
-              <span className="font-mono-numeric text-[11px] text-white/50 tracking-wider">
-                LIVE READOUT
-              </span>
-            </div>
-
-            {/* Monospace Odometer Gauges Dual Card */}
-            <div className="grid grid-cols-2 gap-2 bg-black/40 p-2 rounded-lg border border-white/10">
-              {/* Days Meter */}
-              <div className="flex flex-col items-center justify-center p-2 bg-[#14171C] rounded">
-                <span className="text-[10px] text-white/60 mb-1">عداد الأيام (DAYS)</span>
-                <div className="flex items-center gap-1 font-mono-numeric">
-                  <span className="bg-[#242A34] text-[#F2A93C] text-xl px-2 py-0.5 rounded tracking-widest font-bold">
-                    {String(days).padStart(2, '0')}
-                  </span>
-                  <span className="text-xs text-white/60 font-sans">أيام</span>
-                </div>
-              </div>
-
-              {/* Distance Meter */}
-              <div className="flex flex-col items-center justify-center p-2 bg-[#14171C] rounded">
-                <span className="text-[10px] text-white/60 mb-1">المسافة المقدرة (EST DIST)</span>
-                <div className="flex items-center gap-1 font-mono-numeric">
-                  <span className="bg-[#242A34] text-[#3AA6A6] text-xl px-2 py-0.5 rounded tracking-widest font-bold">
-                    {String(selectedRoute.distanceKm).padStart(4, '0')}
-                  </span>
-                  <span className="text-xs text-white/60 font-sans">كم</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Itemized Cost Breakdown Matrix */}
-            <div className="flex flex-col gap-2.5 text-xs text-white/80">
-              <div className="flex items-center justify-between">
-                <span>سعر الإيجار اليومي</span>
-                <div className="flex items-center gap-1">
-                  <span className="font-mono-numeric text-sm font-bold text-white">
-                    {dailyPrice.toLocaleString('ar-EG')}
-                  </span>
-                  <span className="text-[10px]">ج.م</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span>المجموع الفرعي للإيجار ({days} أيام)</span>
-                <div className="flex items-center gap-1">
-                  <span className="font-mono-numeric text-sm font-bold text-white">
-                    {rentalSubtotal.toLocaleString('ar-EG')}
-                  </span>
-                  <span className="text-[10px]">ج.م</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  وثيقة تأمين الطرق السريعة
-                  <span className="material-symbols-outlined text-[14px] text-[#3AA6A6]">info</span>
-                </span>
-                <div className="flex items-center gap-1">
-                  <span className="font-mono-numeric text-sm font-bold text-white">
-                    {insuranceFee.toLocaleString('ar-EG')}
-                  </span>
-                  <span className="text-[10px]">ج.م</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span>رسوم الخدمة وضريبة القيمة المضافة</span>
-                <div className="flex items-center gap-1">
-                  <span className="font-mono-numeric text-sm font-bold text-white">
-                    {serviceFee.toLocaleString('ar-EG')}
-                  </span>
-                  <span className="text-[10px]">ج.م</span>
-                </div>
-              </div>
-
-              {/* Refundable Deposit Alert Box */}
-              <div className="bg-white/5 p-2 rounded flex items-center justify-between text-xs text-white/90 border border-white/10 mt-1">
-                <div className="flex flex-col">
-                  <span className="text-white font-semibold">مبلغ التأمين المسترد (Deposit)</span>
-                  <span className="text-[10px] text-[#3AA6A6]">يُرد فور فحص السيارة بعد الإرجاع</span>
-                </div>
-                <div className="flex items-center gap-1 font-mono-numeric font-bold text-white">
-                  <span>{deposit.toLocaleString('ar-EG')}</span>
-                  <span className="text-[10px] font-sans">ج.م</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Total Price Glowing Readout */}
-            <div className="bg-[#14171C] p-4 rounded-xl border border-[#c97a1e]/40 shadow-inner flex flex-col gap-1 text-center relative overflow-hidden">
-              <span className="text-[11px] text-white/70 tracking-wider uppercase font-semibold">
-                الإجمالي المستحق للدفع عند الاستلام
-              </span>
-              <div className="flex items-baseline justify-center gap-2 mt-1">
-                <span className="font-mono-numeric text-3xl sm:text-4xl text-[#F2A93C] font-bold tracking-tight drop-shadow-[0_2px_8px_rgba(242,169,60,0.35)]">
-                  {totalPrice.toLocaleString('ar-EG')}
-                </span>
-                <span className="text-sm text-[#F2A93C] font-bold">جنيه مصري</span>
-              </div>
-              <span className="text-[10px] text-white/60">
-                شامل ضريبة القيمة المضافة ومصاريف السفر
-              </span>
-            </div>
-
-            {/* Terms Agreement Checkbox */}
-            <div className="flex items-start gap-2 pt-1">
-              <input
-                id="terms-toggle"
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded text-[#c97a1e] focus:ring-[#c97a1e] accent-[#c97a1e] cursor-pointer"
-              />
-              <label
-                htmlFor="terms-toggle"
-                className="text-xs text-white/80 leading-relaxed cursor-pointer select-none"
-              >
-                أقر بمطابقة رخصة القيادة السارية وموافقتي على شروط الفحص والتسليم الخاصة بالمعرض وتأمين
-                الطريق المعتمد.
               </label>
-            </div>
 
-            {/* Big Primary CTA Button */}
-            <button
-              onClick={handleConfirm}
-              disabled={!termsAccepted || isSubmitting}
-              className={`w-full py-3.5 px-4 rounded-lg font-bold text-sm sm:text-base text-white shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                successMessage
-                  ? 'bg-[#056a41]'
-                  : isSubmitting
-                  ? 'bg-[#ab6300] opacity-90'
-                  : termsAccepted
-                  ? 'bg-[#c97a1e] hover:bg-[#ab6300] active:scale-98 shadow-[#c97a1e]/20'
-                  : 'bg-gray-600 opacity-50 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting && !successMessage ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-[20px]">sync</span>
-                  <span>جاري إصدار تصريح الحجز الرقمي...</span>
-                </>
-              ) : successMessage ? (
-                <>
-                  <span className="material-symbols-outlined text-[20px]">done_all</span>
-                  <span>تم الحجز بنجاح - إصدار التذكرة!</span>
-                </>
-              ) : (
-                <>
-                  <span>تأكيد طلب الحجز والدفع عند الاستلام</span>
-                  <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                </>
-              )}
-            </button>
-
-            {/* Trust Badges */}
-            <div className="flex flex-col gap-1.5 pt-2 border-t border-white/10 text-center">
-              <div className="flex items-center justify-center gap-2 text-xs text-white/80">
-                <span className="material-symbols-outlined text-[#056a41] text-[16px]">
-                  check_circle
-                </span>
-                <span>إلغاء مجاني حتى 24 ساعة قبل موعد بدء الرحلة</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 text-xs text-white/80">
-                <span className="material-symbols-outlined text-[#3AA6A6] text-[16px]">shield</span>
-                <span>ضمان مشوار لحماية العميل والمعرض والتعويض الفوري</span>
-              </div>
+              <button
+                onClick={handleConfirm}
+                disabled={!termsAccepted || isSubmitting || !pickupDate || !returnDate}
+                className="w-full bg-[#121c28] text-white py-4 rounded-xl font-black text-lg hover:bg-[#c97a1e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-xl active:scale-95 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    جاري إرسال الطلب...
+                  </>
+                ) : (
+                  <>
+                    تأكيد الطلب
+                    <span className="material-symbols-outlined">arrow_left_alt</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Quick Agency Location Snapshot */}
-          <div className="bg-white p-3 rounded-lg shadow-xs border border-[#d9c3b1]/40 flex items-center gap-3">
-            <div className="w-12 h-12 rounded bg-[#eef4ff] flex items-center justify-center text-[#884e00] shrink-0">
-              <span className="material-symbols-outlined text-[24px]">storefront</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-xs text-[#121c28]">موقع استلام السيارة</span>
-              <span className="text-[11px] text-[#534437]">
-                محور المشير طنطاوي، بجوار محطة أون رن، القاهرة
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
